@@ -2,15 +2,16 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, a, div, img, text)
+import Html.Attributes exposing (href, src)
 import Http
 import Json.Decode as Decoder exposing (Decoder)
+import Json.Decode.Pipeline exposing (required)
+import List exposing (head)
 import Maybe exposing (withDefault)
-import Tuple exposing (first, second)
 import Url exposing (Protocol(..), Url)
 import Url.Builder as Builder
-import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, map, oneOf, s, string)
+import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, string)
 import Url.Parser.Query as Query
 
 
@@ -45,13 +46,19 @@ routeParser =
 type alias AuthDetails =
     { accessToken : String }
 
+type alias Profile =
+    { name : String, images : List Image }
+
+type alias Image =
+    { width : Maybe Int, height : Maybe Int, url : String }
+
 
 type alias Model =
     { key : Nav.Key
     , url : Url.Url
     , route : Maybe Docs
     , authDetails : Maybe AuthDetails
-    , displayName : Maybe String
+    , profile : Maybe Profile
     }
 
 
@@ -65,7 +72,7 @@ init flags url key =
             in
             case maybeAccessToken of
                 Just accessToken ->
-                    ( Model key url (Parser.parse routeParser url) (Just { accessToken = accessToken }) Nothing, getProfileDetails accessToken )
+                    ( Model key url (Parser.parse routeParser url) (Just { accessToken = accessToken }) Nothing, getProfile accessToken )
 
                 Maybe.Nothing ->
                     ( Model key url (Parser.parse routeParser url) Nothing Nothing, Cmd.none )
@@ -81,7 +88,7 @@ init flags url key =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | GotProfileDetails (Result Http.Error String)
+    | GotProfile (Result Http.Error Profile)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -98,10 +105,10 @@ update msg model =
         UrlChanged url ->
             ( { model | route = Parser.parse routeParser url }, Cmd.none )
 
-        GotProfileDetails result ->
+        GotProfile result ->
             case result of
-                Ok displayName ->
-                    ( { model | displayName = Just displayName }, Cmd.none )
+                Ok profile ->
+                    ( { model | profile = Just profile }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -128,16 +135,27 @@ view model =
         case model.authDetails of
             Nothing ->
                 div [] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl model.url ] [ text "Spotify login" ] ]
-            Just authDetails ->
+            Just _ ->
                 div [] [ text "Succesfully logged in." ]
-        , case model.displayName of
+        , case model.profile of
             Nothing ->
                 div [] []
 
-            Just displayName ->
-                div [] [ text displayName ]
+            Just profile ->
+                div [] [ text profile.name, profilePicture profile ]
         ]
     }
+
+profilePicture : Profile -> Html msg
+profilePicture profile =
+    let
+        firstImage = head profile.images
+        url = case firstImage of
+            Nothing -> "https://picsum.photos/128"
+            Just image -> image.url
+    in
+        img [src url] []
+
 
 
 spotifyAuthLink : Url -> String
@@ -168,8 +186,8 @@ extractFromQueryString queryString key =
     withDefault Nothing (Parser.parse (Parser.query (Query.string key)) url)
 
 
-getProfileDetails : String -> Cmd Msg
-getProfileDetails accessToken =
+getProfile : String -> Cmd Msg
+getProfile accessToken =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
@@ -177,10 +195,20 @@ getProfileDetails accessToken =
         , timeout = Nothing
         , tracker = Nothing
         , url = "https://api.spotify.com/v1/me"
-        , expect = Http.expectJson GotProfileDetails profileDetailsDecoder
+        , expect = Http.expectJson GotProfile profileDecoder
         }
 
 
-profileDetailsDecoder : Decoder String
-profileDetailsDecoder =
-    Decoder.field "display_name" Decoder.string
+profileDecoder : Decoder Profile
+profileDecoder =
+    Decoder.succeed Profile
+        |> required "display_name" Decoder.string
+        |> required "images" (Decoder.list imageDecoder)
+
+
+imageDecoder : Decoder Image
+imageDecoder =
+    Decoder.succeed Image
+        |> required "width" (Decoder.nullable Decoder.int)
+        |> required "height" (Decoder.nullable Decoder.int)
+        |> required "url" Decoder.string
