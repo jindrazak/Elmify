@@ -9,7 +9,7 @@ import Types exposing (Artist, Docs, Model, Msg(..), Profile, TimeRange(..))
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, string)
 import UrlHelper exposing (extractFromQueryString)
-import Views exposing (profileView, topArtistsTimeRangeSelect, topArtistsView)
+import Views exposing (authView, profileView, topArtistsTimeRangeSelect, topArtistsView)
 
 
 
@@ -120,7 +120,8 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Elmify"
     , body =
-        [ profileView model.url model.profile
+        [ authView model.url model.authDetails
+        , profileView model.profile
         , topArtistsTimeRangeSelect
         , topArtistsView model.topArtists
         ]
