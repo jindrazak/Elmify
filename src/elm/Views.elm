@@ -1,14 +1,29 @@
 module Views exposing (..)
 
+import Browser
 import Helper exposing (smallestImage)
-import Html exposing (Html, a, button, div, img, li, ol, text, ul)
-import Html.Attributes exposing (class, href, src)
+import Html exposing (Html, a, button, div, h3, img, li, ol, text, ul)
+import Html.Attributes exposing (class, classList, href, src)
 import Html.Events exposing (onClick)
 import List exposing (map)
 import Maybe exposing (withDefault)
-import Types exposing (Artist, AuthDetails, Image, Msg(..), PagingObject, Profile, TimeRange(..), placeholderImage)
+import Types exposing (Artist, ArtistsPagingObject, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
 import Url exposing (Url)
 import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
+
+
+view : Model -> Browser.Document Msg
+view model =
+    { title = "Elmify"
+    , body =
+        [ authView model.url model.authDetails
+        , profileView model.profile
+        , topArtistsTimeRangeSelect model.topArtistsTimeRange
+        , topArtistsView model.topArtists
+        , topTracksTimeRangeSelect model.topTracksTimeRange
+        , topTracksView model.topTracks
+        ]
+    }
 
 
 profileImage : List Image -> Html Msg
@@ -23,9 +38,15 @@ profileImage images =
 artistLi : Artist -> Html Msg
 artistLi artist =
     li []
-        [ profileImage artist.images
-        , text artist.name
+        [ div [] [ profileImage artist.images ]
+        , div [] [ text artist.name ]
         ]
+
+
+trackLi : Track -> Html Msg
+trackLi track =
+    li []
+        [ div [] [ text track.name ] ]
 
 
 topArtistsView : List Artist -> Html Msg
@@ -35,7 +56,23 @@ topArtistsView list =
             div [] [ text "No artists found." ]
 
         artists ->
-            ol [] <| map artistLi artists
+            div []
+                [ h3 [] [ text "Your top artists" ]
+                , ol [] <| map artistLi artists
+                ]
+
+
+topTracksView : List Track -> Html Msg
+topTracksView list =
+    case list of
+        [] ->
+            div [] [ text "No tracks found." ]
+
+        tracks ->
+            div []
+                [ h3 [] [ text "Your top tracks" ]
+                , ol [] <| map trackLi tracks
+                ]
 
 
 profileView : Maybe Profile -> Html Msg
@@ -64,10 +101,19 @@ authView url maybeAuthDetails =
     div [ class displayed ] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ] [ text "Spotify login" ] ]
 
 
-topArtistsTimeRangeSelect : Html Msg
-topArtistsTimeRangeSelect =
+topArtistsTimeRangeSelect : TimeRange -> Html Msg
+topArtistsTimeRangeSelect timeRange =
     ol []
-        [ li [] [ button [ onClick <| TopArtistsTimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
-        , li [] [ button [ onClick <| TopArtistsTimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
-        , li [] [ button [ onClick <| TopArtistsTimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
+        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TopArtistsTimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
+        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TopArtistsTimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
+        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TopArtistsTimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
+        ]
+
+
+topTracksTimeRangeSelect : TimeRange -> Html Msg
+topTracksTimeRangeSelect timeRange =
+    ol []
+        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TopTracksTimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
+        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TopTracksTimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
+        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TopTracksTimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
         ]

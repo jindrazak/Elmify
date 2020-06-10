@@ -2,7 +2,7 @@ module Decoders exposing (..)
 
 import Json.Decode as Decoder exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
-import Types exposing (Artist, Image, PagingObject, Profile)
+import Types exposing (Artist, ArtistsPagingObject, Image, Profile, Track, TracksPagingObject)
 
 
 profileDecoder : Decoder Profile
@@ -16,10 +16,16 @@ profileDecoder =
 -- Decodes Spotify paging object https://developer.spotify.com/documentation/web-api/reference/object-model/#paging-object
 
 
-pagingObjectDecoder : Decoder PagingObject
-pagingObjectDecoder =
-    Decoder.succeed PagingObject
+artistsPagingObjectDecoder : Decoder ArtistsPagingObject
+artistsPagingObjectDecoder =
+    Decoder.succeed ArtistsPagingObject
         |> required "items" (Decoder.list artistDecoder)
+
+
+tracksPagingObjectDecoder : Decoder TracksPagingObject
+tracksPagingObjectDecoder =
+    Decoder.succeed TracksPagingObject
+        |> required "items" (Decoder.list trackDecoder)
 
 
 
@@ -33,6 +39,12 @@ artistDecoder =
         |> required "genres" (Decoder.list Decoder.string)
         |> required "images" (Decoder.list imageDecoder)
         |> required "popularity" Decoder.int
+
+
+trackDecoder : Decoder Track
+trackDecoder =
+    Decoder.succeed Track
+        |> required "name" Decoder.string
 
 
 imageDecoder : Decoder Image

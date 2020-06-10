@@ -22,8 +22,12 @@ type alias Image =
     { width : Maybe Int, height : Maybe Int, url : String }
 
 
-type alias PagingObject =
+type alias ArtistsPagingObject =
     { artists : List Artist }
+
+
+type alias TracksPagingObject =
+    { tracks : List Track }
 
 
 type alias Artist =
@@ -31,6 +35,11 @@ type alias Artist =
     , genres : List String
     , images : List Image
     , popularity : Int
+    }
+
+
+type alias Track =
+    { name : String
     }
 
 
@@ -42,6 +51,8 @@ type alias Model =
     , profile : Maybe Profile
     , topArtists : List Artist
     , topArtistsTimeRange : TimeRange
+    , topTracks : List Track
+    , topTracksTimeRange : TimeRange
     }
 
 
@@ -49,14 +60,21 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | GotProfile (Result Http.Error Profile)
-    | GotTopArtists (Result Http.Error PagingObject)
+    | GotTopArtists (Result Http.Error ArtistsPagingObject)
+    | GotTopTracks (Result Http.Error TracksPagingObject)
     | TopArtistsTimeRangeSelected TimeRange
+    | TopTracksTimeRangeSelected TimeRange
 
 
 type TimeRange
     = ShortTerm
     | MediumTerm
     | LongTerm
+
+
+type TopSubject
+    = TopArtists
+    | TopTracks
 
 
 placeholderImage =

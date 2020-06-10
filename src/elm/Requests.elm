@@ -1,9 +1,9 @@
 module Requests exposing (..)
 
-import Decoders exposing (pagingObjectDecoder, profileDecoder)
+import Decoders exposing (artistsPagingObjectDecoder, profileDecoder, tracksPagingObjectDecoder)
 import Http
-import Types exposing (Msg(..), TimeRange)
-import UrlHelper exposing (spotifyTopArtistsUrl)
+import Types exposing (Msg(..), TimeRange, TopSubject(..))
+import UrlHelper exposing (spotifyTopUrl)
 
 
 getProfile : String -> Cmd Msg
@@ -27,6 +27,19 @@ getUsersTopArtists accessToken timeRange =
         , body = Http.emptyBody
         , timeout = Nothing
         , tracker = Nothing
-        , url = spotifyTopArtistsUrl timeRange
-        , expect = Http.expectJson GotTopArtists pagingObjectDecoder
+        , url = spotifyTopUrl TopArtists timeRange
+        , expect = Http.expectJson GotTopArtists artistsPagingObjectDecoder
+        }
+
+
+getUsersTopTracks : String -> TimeRange -> Cmd Msg
+getUsersTopTracks accessToken timeRange =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+        , body = Http.emptyBody
+        , timeout = Nothing
+        , tracker = Nothing
+        , url = spotifyTopUrl TopTracks timeRange
+        , expect = Http.expectJson GotTopTracks tracksPagingObjectDecoder
         }
