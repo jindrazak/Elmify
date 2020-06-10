@@ -31,12 +31,14 @@ module.exports = {
             },
             // loading styles
             {
-                test: /\.(scss|css)$/,
-                loader: [
-                    { loader: MiniCssExtractPlugin.loader },  // using MiniCssExtractPlugin to extract styles into separate file
-                    'css-loader',
-                    'sass-loader'
-                ]
+                test: /\.less$/,
+                use: [{
+                    loader: 'style-loader' // creates style nodes from JS strings
+                }, {
+                    loader: 'css-loader' // translates CSS into CommonJS
+                }, {
+                    loader: 'less-loader' // compiles Less to CSS
+                }]
             },
             // loading fonts
             {
