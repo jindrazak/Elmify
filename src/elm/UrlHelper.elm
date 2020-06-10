@@ -1,6 +1,7 @@
 module UrlHelper exposing (..)
 
 import Maybe exposing (withDefault)
+import Types exposing (TimeRange(..))
 import Url exposing (Protocol(..), Url)
 import Url.Builder as Builder
 import Url.Parser as Parser
@@ -16,6 +17,25 @@ spotifyAuthLink redirectUrl =
         , Builder.string "redirect_uri" <| Url.toString redirectUrl
         , Builder.string "scope" "user-top-read"
         ]
+
+
+spotifyTopArtistsUrl : TimeRange -> String
+spotifyTopArtistsUrl timeRange =
+    let
+        timeRangeString =
+            case timeRange of
+                ShortTerm ->
+                    "short_term"
+
+                MediumTerm ->
+                    "medium_term"
+
+                LongTerm ->
+                    "long_term"
+    in
+    Builder.crossOrigin "https://api.spotify.com"
+        [ "v1", "me", "top", "artists" ]
+        [ Builder.string "time_range" timeRangeString ]
 
 
 spotifyRedirectUrl : Url -> Url

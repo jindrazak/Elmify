@@ -41,6 +41,7 @@ type alias Model =
     , authDetails : Maybe AuthDetails
     , profile : Maybe Profile
     , topArtists : List Artist
+    , topArtistsTimeRange : TimeRange
     }
 
 
@@ -49,6 +50,13 @@ type Msg
     | UrlChanged Url.Url
     | GotProfile (Result Http.Error Profile)
     | GotTopArtists (Result Http.Error PagingObject)
+    | TopArtistsTimeRangeSelected TimeRange
+
+
+type TimeRange
+    = ShortTerm
+    | MediumTerm
+    | LongTerm
 
 
 placeholderImage =
