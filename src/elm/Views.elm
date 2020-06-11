@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, classList, href, src)
 import Html.Events exposing (onClick)
 import List exposing (map)
 import Maybe exposing (withDefault)
-import Types exposing (Artist, ArtistsPagingObject, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
 import Url exposing (Url)
 import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 
@@ -21,7 +21,7 @@ view model =
         , topArtistsTimeRangeSelect model.topArtistsTimeRange
         , topArtistsView model.topArtists
         , topTracksTimeRangeSelect model.topTracksTimeRange
-        , topTracksView model.topTracks
+        , topTracksView model.topTracks model.audioFeatures
         ]
     }
 
@@ -43,8 +43,8 @@ artistLi artist =
         ]
 
 
-trackLi : Track -> Html Msg
-trackLi track =
+trackLi : Track -> AudioFeatures -> Html Msg
+trackLi track audioFeatures =
     li []
         [ div [] [ text track.name ] ]
 
@@ -62,16 +62,16 @@ topArtistsView list =
                 ]
 
 
-topTracksView : List Track -> Html Msg
-topTracksView list =
-    case list of
+topTracksView : List Track -> List AudioFeatures -> Html Msg
+topTracksView tracksList audioFeaturesList =
+    case tracksList of
         [] ->
             div [] [ text "No tracks found." ]
 
         tracks ->
             div []
                 [ h3 [] [ text "Your top tracks" ]
-                , ol [] <| map trackLi tracks
+                , ol [] <| map trackLi tracks audioFeaturesList
                 ]
 
 
