@@ -2,8 +2,8 @@ module Views exposing (..)
 
 import Browser
 import Helper exposing (averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h3, header, img, li, main_, ol, text, ul)
-import Html.Attributes exposing (class, classList, href, src)
+import Html exposing (Html, a, button, div, h1, h3, header, img, li, main_, ol, p, section, text, ul)
+import Html.Attributes exposing (class, classList, href, id, src, style)
 import Html.Events exposing (onClick)
 import List exposing (any, map)
 import Maybe exposing (withDefault)
@@ -29,14 +29,14 @@ profileImage images =
         image =
             withDefault placeholderImage <| smallestImage images
     in
-    img [ src image.url ] []
+    div [ class "image-container", style "background-image" <| "url(" ++ image.url ++ ")" ] []
 
 
 artistLi : Artist -> Html Msg
 artistLi artist =
     li []
         [ div [] [ profileImage artist.images ]
-        , div [] [ text artist.name ]
+        , div [ class "artist-name-container" ] [ text artist.name ]
         ]
 
 
@@ -72,12 +72,12 @@ audioFeaturesView maybeAudioFeatures =
 
 topArtistsView : List Artist -> Html Msg
 topArtistsView list =
-    case list of
-        [] ->
-            div [] [ text "No artists found." ]
+    section [ id "top-artists" ] <|
+        case list of
+            [] ->
+                [ text "No artists found." ]
 
-        artists ->
-            div []
+            artists ->
                 [ h3 [] [ text "Your top artists" ]
                 , ol [] <| map artistLi artists
                 ]
@@ -85,12 +85,12 @@ topArtistsView list =
 
 topTracksView : List Track -> Html Msg
 topTracksView tracksList =
-    case tracksList of
-        [] ->
-            div [] [ text "No tracks found." ]
+    section [ id "top-tracks" ] <|
+        case tracksList of
+            [] ->
+                [ text "No tracks found." ]
 
-        tracks ->
-            div []
+            tracks ->
                 [ h3 [] [ text "Your top tracks" ]
                 , ol [] <| map trackLi tracks
                 ]
@@ -102,16 +102,16 @@ userTastesView tracksList =
         maybeAudioFeatures =
             map .audioFeatures tracksList
     in
-    case tracksList of
-        [] ->
-            div [] [ text "No tracks found." ]
+    section [ id "users-tastes" ] <|
+        case tracksList of
+            [] ->
+                [ text "No tracks found." ]
 
-        _ ->
-            if any (\x -> x == Nothing) maybeAudioFeatures then
-                text "Loading audio features..."
+            _ ->
+                if any (\x -> x == Nothing) maybeAudioFeatures then
+                    [ p [] [ text "Loading audio features..." ] ]
 
-            else
-                div []
+                else
                     [ h3 [] [ text "Your tastes" ]
                     , ul []
                         [ li [] [ text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList) ]
@@ -129,7 +129,7 @@ userTastesView tracksList =
 
 profileView : Maybe Profile -> Html Msg
 profileView maybeProfile =
-    div []
+    div [ id "profile-panel" ]
         [ case maybeProfile of
             Nothing ->
                 div [] [ text "User not logged in." ]
@@ -142,10 +142,9 @@ profileView maybeProfile =
 headerView : Url -> Maybe AuthDetails -> Maybe Profile -> Html Msg
 headerView url maybeAuthDetails maybeProfile =
     header []
-        [ div []
-            [ authView url maybeAuthDetails
-            , profileView maybeProfile
-            ]
+        [ h1 [] [ text "Elmify" ]
+        , authView url maybeAuthDetails
+        , profileView maybeProfile
         ]
 
 
@@ -153,30 +152,23 @@ mainView : TimeRange -> List Artist -> List Track -> Html Msg
 mainView timeRange topArtists topTracks =
     main_ []
         [ timeRangeSelect timeRange
-        , topArtistsView topArtists
-        , topTracksView topTracks
-        , userTastesView topTracks
+        , div [ id "top-sections" ]
+            [ topArtistsView topArtists
+            , topTracksView topTracks
+            , userTastesView topTracks
+            ]
         ]
 
 
 authView : Url -> Maybe AuthDetails -> Html Msg
 authView url maybeAuthDetails =
-    let
-        displayed =
-            case maybeAuthDetails of
-                Nothing ->
-                    "display"
-
-                Just _ ->
-                    "hidden"
-    in
-    div [ class displayed ] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ] [ text "Spotify login" ] ]
+    div [ classList [ ( "hidden", maybeAuthDetails /= Nothing ) ] ] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ] [ text "Spotify login" ] ]
 
 
 timeRangeSelect : TimeRange -> Html Msg
 timeRangeSelect timeRange =
-    ol []
-        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
+    div [ id "timerange-picker" ]
+        [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ]
+        , button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ]
+        , button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ]
         ]
