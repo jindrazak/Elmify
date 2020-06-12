@@ -70,9 +70,8 @@ type alias Model =
     , authDetails : Maybe AuthDetails
     , profile : Maybe Profile
     , topArtists : List Artist
-    , topArtistsTimeRange : TimeRange
+    , timeRange : TimeRange
     , topTracks : List Track
-    , topTracksTimeRange : TimeRange
     }
 
 
@@ -83,8 +82,7 @@ type Msg
     | GotTopArtists (Result Http.Error ArtistsPagingObject)
     | GotTopTracks (Result Http.Error TracksPagingObject)
     | GotAudioFeatures (Result Http.Error AudioFeaturesList)
-    | TopArtistsTimeRangeSelected TimeRange
-    | TopTracksTimeRangeSelected TimeRange
+    | TimeRangeSelected TimeRange
 
 
 type TimeRange

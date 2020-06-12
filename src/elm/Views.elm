@@ -1,11 +1,11 @@
 module Views exposing (..)
 
 import Browser
-import Helper exposing (audioFeatureValue, averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h3, img, li, ol, text)
+import Helper exposing (averageAudioFeatureValue, smallestImage)
+import Html exposing (Html, a, button, div, h3, header, img, li, main_, ol, text, ul)
 import Html.Attributes exposing (class, classList, href, src)
 import Html.Events exposing (onClick)
-import List exposing (any, foldl, map, map2)
+import List exposing (any, map)
 import Maybe exposing (withDefault)
 import String exposing (fromFloat)
 import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
@@ -17,13 +17,8 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Elmify"
     , body =
-        [ authView model.url model.authDetails
-        , profileView model.profile
-        , topArtistsTimeRangeSelect model.topArtistsTimeRange
-        , topArtistsView model.topArtists
-        , topTracksTimeRangeSelect model.topTracksTimeRange
-        , topTracksView model.topTracks
-        , userTastesView model.topTracks
+        [ headerView model.url model.authDetails model.profile
+        , mainView model.timeRange model.topArtists model.topTracks
         ]
     }
 
@@ -118,15 +113,17 @@ userTastesView tracksList =
             else
                 div []
                     [ h3 [] [ text "Your tastes" ]
-                    , text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList)
-                    , text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList)
-                    , text <| "Energy " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .energy tracksList)
-                    , text <| "Instrumentalness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .instrumentalness tracksList)
-                    , text <| "Liveness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .liveness tracksList)
-                    , text <| "Loudness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .loudness tracksList)
-                    , text <| "Speechiness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .speechiness tracksList)
-                    , text <| "Valence " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .valence tracksList)
-                    , text <| "Tempo " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .tempo tracksList)
+                    , ul []
+                        [ li [] [ text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList) ]
+                        , li [] [ text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList) ]
+                        , li [] [ text <| "Energy " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .energy tracksList) ]
+                        , li [] [ text <| "Instrumentalness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .instrumentalness tracksList) ]
+                        , li [] [ text <| "Liveness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .liveness tracksList) ]
+                        , li [] [ text <| "Loudness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .loudness tracksList) ]
+                        , li [] [ text <| "Speechiness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .speechiness tracksList) ]
+                        , li [] [ text <| "Valence " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .valence tracksList) ]
+                        , li [] [ text <| "Tempo " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .tempo tracksList) ]
+                        ]
                     ]
 
 
@@ -139,6 +136,26 @@ profileView maybeProfile =
 
             Just profile ->
                 div [] [ text profile.name, profileImage profile.images ]
+        ]
+
+
+headerView : Url -> Maybe AuthDetails -> Maybe Profile -> Html Msg
+headerView url maybeAuthDetails maybeProfile =
+    header []
+        [ div []
+            [ authView url maybeAuthDetails
+            , profileView maybeProfile
+            ]
+        ]
+
+
+mainView : TimeRange -> List Artist -> List Track -> Html Msg
+mainView timeRange topArtists topTracks =
+    main_ []
+        [ timeRangeSelect timeRange
+        , topArtistsView topArtists
+        , topTracksView topTracks
+        , userTastesView topTracks
         ]
 
 
@@ -156,19 +173,10 @@ authView url maybeAuthDetails =
     div [ class displayed ] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ] [ text "Spotify login" ] ]
 
 
-topArtistsTimeRangeSelect : TimeRange -> Html Msg
-topArtistsTimeRangeSelect timeRange =
+timeRangeSelect : TimeRange -> Html Msg
+timeRangeSelect timeRange =
     ol []
-        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TopArtistsTimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TopArtistsTimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TopArtistsTimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
-        ]
-
-
-topTracksTimeRangeSelect : TimeRange -> Html Msg
-topTracksTimeRangeSelect timeRange =
-    ol []
-        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TopTracksTimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TopTracksTimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TopTracksTimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
+        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
+        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
+        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
         ]
