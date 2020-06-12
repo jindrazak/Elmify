@@ -1,8 +1,8 @@
 module Helper exposing (..)
 
-import List exposing (foldl, head)
+import List exposing (all, any, foldl, head, length, map)
 import Maybe exposing (withDefault)
-import Types exposing (Image, placeholderImage)
+import Types exposing (AudioFeatures, Image, Track, placeholderImage)
 
 
 smallestImage : List Image -> Maybe Image
@@ -29,3 +29,29 @@ compareImageSizes a b =
 
     else
         b
+
+
+audioFeatureValue : (AudioFeatures -> Float) -> Track -> Maybe Float
+audioFeatureValue audioFeatureAccessor track =
+    case track.audioFeatures of
+        Nothing ->
+            Nothing
+
+        Just audioFeatures ->
+            Just <| audioFeatureAccessor <| audioFeatures
+
+
+averageAudioFeatureValue : (AudioFeatures -> Float) -> List Track -> Maybe Float
+averageAudioFeatureValue audioFeatureAccessor tracks =
+    let
+        maybeValues =
+            map (audioFeatureValue audioFeatureAccessor) tracks
+
+        values =
+            map (\x -> withDefault 0 x) maybeValues
+    in
+    if any (\x -> x == Nothing) maybeValues then
+        Nothing
+
+    else
+        Just <| foldl (+) 0 values / toFloat (length values)

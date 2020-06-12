@@ -16,6 +16,8 @@
   "devDependencies": {
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
+    "elm-format": "^0.8.3",
+    "elm-test": "^0.19.1-revision2",
     "elm-webpack-loader": "^6.0.1",
     "file-loader": "^6.0.0",
     "html-webpack-plugin": "^4.3.0",

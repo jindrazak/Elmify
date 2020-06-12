@@ -39,7 +39,27 @@ type alias Artist =
 
 
 type alias Track =
-    { name : String
+    { id : String
+    , name : String
+    , audioFeatures : Maybe AudioFeatures
+    }
+
+
+type alias AudioFeaturesList =
+    { audioFeatures : List AudioFeatures
+    }
+
+
+type alias AudioFeatures =
+    { acousticness : Float
+    , danceability : Float
+    , energy : Float
+    , instrumentalness : Float
+    , liveness : Float
+    , loudness : Float
+    , speechiness : Float
+    , valence : Float
+    , tempo : Float
     }
 
 
@@ -62,6 +82,7 @@ type Msg
     | GotProfile (Result Http.Error Profile)
     | GotTopArtists (Result Http.Error ArtistsPagingObject)
     | GotTopTracks (Result Http.Error TracksPagingObject)
+    | GotAudioFeatures (Result Http.Error AudioFeaturesList)
     | TopArtistsTimeRangeSelected TimeRange
     | TopTracksTimeRangeSelected TimeRange
 

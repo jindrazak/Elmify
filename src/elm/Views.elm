@@ -1,13 +1,14 @@
 module Views exposing (..)
 
 import Browser
-import Helper exposing (smallestImage)
-import Html exposing (Html, a, button, div, h3, img, li, ol, text, ul)
+import Helper exposing (audioFeatureValue, averageAudioFeatureValue, smallestImage)
+import Html exposing (Html, a, button, div, h3, img, li, ol, text)
 import Html.Attributes exposing (class, classList, href, src)
 import Html.Events exposing (onClick)
-import List exposing (map)
+import List exposing (any, foldl, map, map2)
 import Maybe exposing (withDefault)
-import Types exposing (Artist, ArtistsPagingObject, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
+import String exposing (fromFloat)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
 import Url exposing (Url)
 import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 
@@ -22,6 +23,7 @@ view model =
         , topArtistsView model.topArtists
         , topTracksTimeRangeSelect model.topTracksTimeRange
         , topTracksView model.topTracks
+        , userTastesView model.topTracks
         ]
     }
 
@@ -46,7 +48,31 @@ artistLi artist =
 trackLi : Track -> Html Msg
 trackLi track =
     li []
-        [ div [] [ text track.name ] ]
+        [ div []
+            [ text track.name
+            , audioFeaturesView track.audioFeatures
+            ]
+        ]
+
+
+audioFeaturesView : Maybe AudioFeatures -> Html Msg
+audioFeaturesView maybeAudioFeatures =
+    case maybeAudioFeatures of
+        Nothing ->
+            div [] []
+
+        Just audioFeatures ->
+            div []
+                [ div [] [ text <| "Acousticness" ++ fromFloat audioFeatures.acousticness ]
+                , div [] [ text <| "Danceability" ++ fromFloat audioFeatures.danceability ]
+                , div [] [ text <| "Energy" ++ fromFloat audioFeatures.energy ]
+                , div [] [ text <| "Instrumentalness" ++ fromFloat audioFeatures.instrumentalness ]
+                , div [] [ text <| "Liveness" ++ fromFloat audioFeatures.liveness ]
+                , div [] [ text <| "Loudness" ++ fromFloat audioFeatures.loudness ]
+                , div [] [ text <| "Speechiness" ++ fromFloat audioFeatures.speechiness ]
+                , div [] [ text <| "Valence" ++ fromFloat audioFeatures.valence ]
+                , div [] [ text <| "Tempo" ++ fromFloat audioFeatures.tempo ]
+                ]
 
 
 topArtistsView : List Artist -> Html Msg
@@ -63,8 +89,8 @@ topArtistsView list =
 
 
 topTracksView : List Track -> Html Msg
-topTracksView list =
-    case list of
+topTracksView tracksList =
+    case tracksList of
         [] ->
             div [] [ text "No tracks found." ]
 
@@ -73,6 +99,35 @@ topTracksView list =
                 [ h3 [] [ text "Your top tracks" ]
                 , ol [] <| map trackLi tracks
                 ]
+
+
+userTastesView : List Track -> Html Msg
+userTastesView tracksList =
+    let
+        maybeAudioFeatures =
+            map .audioFeatures tracksList
+    in
+    case tracksList of
+        [] ->
+            div [] [ text "No tracks found." ]
+
+        _ ->
+            if any (\x -> x == Nothing) maybeAudioFeatures then
+                text "Loading audio features..."
+
+            else
+                div []
+                    [ h3 [] [ text "Your tastes" ]
+                    , text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList)
+                    , text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList)
+                    , text <| "Energy " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .energy tracksList)
+                    , text <| "Instrumentalness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .instrumentalness tracksList)
+                    , text <| "Liveness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .liveness tracksList)
+                    , text <| "Loudness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .loudness tracksList)
+                    , text <| "Speechiness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .speechiness tracksList)
+                    , text <| "Valence " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .valence tracksList)
+                    , text <| "Tempo " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .tempo tracksList)
+                    ]
 
 
 profileView : Maybe Profile -> Html Msg

@@ -1,8 +1,8 @@
 module Decoders exposing (..)
 
 import Json.Decode as Decoder exposing (Decoder)
-import Json.Decode.Pipeline exposing (required)
-import Types exposing (Artist, ArtistsPagingObject, Image, Profile, Track, TracksPagingObject)
+import Json.Decode.Pipeline exposing (hardcoded, required)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesList, Image, Profile, Track, TracksPagingObject)
 
 
 profileDecoder : Decoder Profile
@@ -28,6 +28,12 @@ tracksPagingObjectDecoder =
         |> required "items" (Decoder.list trackDecoder)
 
 
+audioFeaturesListDecoder : Decoder AudioFeaturesList
+audioFeaturesListDecoder =
+    Decoder.succeed AudioFeaturesList
+        |> required "audio_features" (Decoder.list audioFeaturesDecoder)
+
+
 
 -- Decodes Spotify artist object https://developer.spotify.com/documentation/web-api/reference/object-model/#artist-object-full
 
@@ -44,7 +50,9 @@ artistDecoder =
 trackDecoder : Decoder Track
 trackDecoder =
     Decoder.succeed Track
+        |> required "id" Decoder.string
         |> required "name" Decoder.string
+        |> hardcoded Nothing
 
 
 imageDecoder : Decoder Image
@@ -53,3 +61,17 @@ imageDecoder =
         |> required "width" (Decoder.nullable Decoder.int)
         |> required "height" (Decoder.nullable Decoder.int)
         |> required "url" Decoder.string
+
+
+audioFeaturesDecoder : Decoder AudioFeatures
+audioFeaturesDecoder =
+    Decoder.succeed AudioFeatures
+        |> required "acousticness" Decoder.float
+        |> required "danceability" Decoder.float
+        |> required "energy" Decoder.float
+        |> required "instrumentalness" Decoder.float
+        |> required "liveness" Decoder.float
+        |> required "loudness" Decoder.float
+        |> required "speechiness" Decoder.float
+        |> required "valence" Decoder.float
+        |> required "tempo" Decoder.float
