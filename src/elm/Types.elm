@@ -41,6 +41,7 @@ type alias Artist =
 type alias Track =
     { id : String
     , name : String
+    , audioFeatures : Maybe AudioFeatures
     }
 
 
@@ -72,7 +73,6 @@ type alias Model =
     , topArtistsTimeRange : TimeRange
     , topTracks : List Track
     , topTracksTimeRange : TimeRange
-    , audioFeatures : List AudioFeatures
     }
 
 
