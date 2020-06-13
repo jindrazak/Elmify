@@ -35,6 +35,7 @@ type alias Artist =
     , genres : List String
     , images : List Image
     , popularity : Int
+    , expanded : Bool
     }
 
 
@@ -101,6 +102,7 @@ type Msg
     | GotAudioFeatures (Result Http.Error AudioFeaturesList)
     | TimeRangeSelected TimeRange
     | TrackExpanded Track
+    | ArtistExpanded Artist
 
 
 type TimeRange

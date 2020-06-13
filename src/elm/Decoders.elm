@@ -45,6 +45,7 @@ artistDecoder =
         |> required "genres" (Decoder.list Decoder.string)
         |> required "images" (Decoder.list imageDecoder)
         |> required "popularity" Decoder.int
+        |> hardcoded False
 
 
 simplifiedArtistDecoder : Decoder SimplifiedArtist

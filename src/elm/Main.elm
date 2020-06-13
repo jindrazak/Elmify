@@ -146,6 +146,21 @@ update msg model =
             in
             ( { model | topTracks = topTracks }, Cmd.none )
 
+        ArtistExpanded artist ->
+            let
+                topArtists =
+                    map
+                        (\topArtist ->
+                            if topArtist == artist then
+                                { topArtist | expanded = not topArtist.expanded }
+
+                            else
+                                topArtist
+                        )
+                        model.topArtists
+            in
+            ( { model | topArtists = topArtists }, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS

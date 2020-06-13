@@ -36,10 +36,24 @@ profileImage images =
 
 artistLi : Artist -> Html Msg
 artistLi artist =
-    li []
-        [ div []
+    li [ onClick <| ArtistExpanded artist ]
+        [ div [ class "artist-container" ]
             [ profileImage artist.images
-            , div [ class "artist-name-container" ] [ text artist.name ]
+            , p [] [ text <| artist.name ]
+            ]
+        , artistDetails artist
+        ]
+
+
+artistDetails : Artist -> Html Msg
+artistDetails artist =
+    div [ class "expandable", classList [ ( "expanded", artist.expanded ) ] ]
+        [ popularityView artist
+        , p []
+            [ p []
+                [ text "Genres: "
+                , span [ class "genres" ] [ text <| join ", " artist.genres ]
+                ]
             ]
         ]
 
@@ -50,16 +64,16 @@ trackLi track =
         [ div [ class "track-container" ]
             [ p []
                 [ text <| track.name
-                , span [ class "artist-name" ] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
+                , span [] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
                 ]
             ]
-        , audioFeaturesView track
+        , trackDetails track
         ]
 
 
-audioFeaturesView : Track -> Html Msg
-audioFeaturesView track =
-    div [ id "audio-features", classList [ ( "expanded", track.expanded ) ] ] <|
+trackDetails : Track -> Html Msg
+trackDetails track =
+    div [ class "expandable", classList [ ( "expanded", track.expanded ) ] ] <|
         case track.audioFeatures of
             Nothing ->
                 []
@@ -78,17 +92,24 @@ audioFeatureView audioFeature audioFeaturesConfiguration =
 
                 _ ->
                     audioFeaturesConfiguration.accessor audioFeature * 100
-
-        barWidth =
-            fromFloat percentage ++ "%"
     in
-    div [ class "audio-feature" ]
-        [ span [] [ text audioFeaturesConfiguration.name ]
-        , div [ class "audio-feature-bar" ]
+    simpleBarView audioFeaturesConfiguration.name percentage audioFeaturesConfiguration.color
+
+
+popularityView : Artist -> Html Msg
+popularityView artist =
+    simpleBarView "Popularity" (toFloat artist.popularity) "#ff1493"
+
+
+simpleBarView : String -> Float -> String -> Html Msg
+simpleBarView name percentage color =
+    div [ class "simple-bar-container" ]
+        [ p [] [ text name ]
+        , div [ class "simple-bar" ]
             [ div
-                [ class "audio-feature-bar"
-                , style "width" barWidth
-                , style "background-color" audioFeaturesConfiguration.color
+                [ class "simple-bar"
+                , style "width" <| fromFloat percentage ++ "%"
+                , style "background-color" color
                 ]
                 []
             ]
@@ -189,7 +210,7 @@ logoView : Html Msg
 logoView =
     div [ id "logo-container" ]
         [ h1 [] [ text "elmify" ]
-        , span [] [ text "Spotify stats about your listening tastes" ]
+        , p [] [ text "Spotify stats about your listening tastes" ]
         ]
 
 

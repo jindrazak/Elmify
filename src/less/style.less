@@ -49,6 +49,10 @@ li>div:first-child:before {
   width: 1rem;
 }
 
+p {
+  margin: 0;
+}
+
 .hidden {
   display: none !important;
 }
@@ -62,7 +66,7 @@ li>div:first-child:before {
 
 #logo-container {
   align-items: center;
-  span {
+  p {
     width: 10rem;
     margin-top: 16px;
     font-size: 1rem;
@@ -87,7 +91,8 @@ li>div:first-child:before {
       align-items: center;
       p {
         font-size: 1.3rem;
-        margin: 0 0.4rem;
+        margin-left: 0.4rem;
+        margin-right: 0.4rem;
       }
     }
   }
@@ -111,6 +116,14 @@ header {
       align-items: center;
       padding: 0 20px;
     }
+  }
+}
+
+.expandable{
+  display: none;
+  margin: 0 2rem;
+  &.expanded{
+    display: inherit;
   }
 }
 
@@ -151,52 +164,56 @@ main {
     justify-content: center;
   }
   #top-sections {
+    li:hover{
+      background-color: #484848;
+    }
     section {
       padding: 1rem;
       &#top-artists {
+        width: 25%;
         li {
-          .artist-name-container {
+          .artist-container{
             align-items: center;
-            margin: 0 1rem;
-          }
-          .image-container {
-            height: 2rem;
-            width: 2rem;
+            p {
+              margin-left: 1rem;
+              margin-right: 1rem;
+            }
+            .image-container {
+              height: 2rem;
+              width: 2rem;
+            }
           }
         }
       }
       &#top-tracks{
-        .track-container{
+        width: 50%;
+        .track-container {
           width: 100%;
           p{
-            margin: 0.4rem 0;
-            span.artist-name{
-              color: @primary;
-              font-size: 0.8rem;
-            }
-          }
-        }
-        #audio-features{
-          margin: 0 2rem;
-          display: none;
-          &.expanded{
-            display: inherit;
-          }
-          .audio-feature{
-            width: 100%;
-            align-items: center;
-            justify-content: space-between;
-            .audio-feature-bar{
-              width: 60%;
-              background-color: white;
-              height: 7px;
-              min-width: 7px !important;
-              border-radius: 10px;
-            }
+            margin-top: 0.4rem;
+            margin-bottom: 0.4rem;
           }
         }
       }
     }
+  }
+}
+
+span{
+  color: @primary;
+  font-size: 0.8rem;
+}
+
+.simple-bar-container{
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  .simple-bar{
+    width: 60%;
+    background-color: white;
+    height: 7px;
+    min-width: 7px !important;
+    border-radius: 10px;
   }
 }
 
