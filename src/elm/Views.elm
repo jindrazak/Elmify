@@ -1,14 +1,15 @@
 module Views exposing (..)
 
 import Browser
+import Constants exposing (audioFeaturesConfigurations)
 import Helper exposing (averageAudioFeatureValue, smallestImage)
 import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text, ul)
 import Html.Attributes exposing (class, classList, href, id, style)
 import Html.Events exposing (onClick)
-import List exposing (any, map)
+import List exposing (any, map, map2)
 import Maybe exposing (withDefault)
-import String exposing (fromFloat)
-import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
+import String exposing (fromFloat, join)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesConfiguration, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
 import Url exposing (Url)
 import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 
@@ -36,39 +37,62 @@ profileImage images =
 artistLi : Artist -> Html Msg
 artistLi artist =
     li []
-        [ profileImage artist.images
-        , div [ class "artist-name-container" ] [ text artist.name ]
+        [ div []
+            [ profileImage artist.images
+            , div [ class "artist-name-container" ] [ text artist.name ]
+            ]
         ]
 
 
 trackLi : Track -> Html Msg
 trackLi track =
-    li []
-        [ div []
-            [ text track.name
-            , audioFeaturesView track.audioFeatures
+    li [ onClick <| TrackExpanded track ]
+        [ div [ class "track-container" ]
+            [ p []
+                [ text <| track.name
+                , span [ class "artist-name" ] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
+                ]
             ]
+        , audioFeaturesView track
         ]
 
 
-audioFeaturesView : Maybe AudioFeatures -> Html Msg
-audioFeaturesView maybeAudioFeatures =
-    case maybeAudioFeatures of
-        Nothing ->
-            div [] []
+audioFeaturesView : Track -> Html Msg
+audioFeaturesView track =
+    div [ id "audio-features", classList [ ( "expanded", track.expanded ) ] ] <|
+        case track.audioFeatures of
+            Nothing ->
+                []
 
-        Just audioFeatures ->
-            div []
-                [ div [] [ text <| "Acousticness" ++ fromFloat audioFeatures.acousticness ]
-                , div [] [ text <| "Danceability" ++ fromFloat audioFeatures.danceability ]
-                , div [] [ text <| "Energy" ++ fromFloat audioFeatures.energy ]
-                , div [] [ text <| "Instrumentalness" ++ fromFloat audioFeatures.instrumentalness ]
-                , div [] [ text <| "Liveness" ++ fromFloat audioFeatures.liveness ]
-                , div [] [ text <| "Loudness" ++ fromFloat audioFeatures.loudness ]
-                , div [] [ text <| "Speechiness" ++ fromFloat audioFeatures.speechiness ]
-                , div [] [ text <| "Valence" ++ fromFloat audioFeatures.valence ]
-                , div [] [ text <| "Tempo" ++ fromFloat audioFeatures.tempo ]
+            Just audioFeatures ->
+                map (audioFeatureView audioFeatures) audioFeaturesConfigurations
+
+
+audioFeatureView : AudioFeatures -> AudioFeaturesConfiguration -> Html Msg
+audioFeatureView audioFeature audioFeaturesConfiguration =
+    let
+        percentage =
+            case audioFeaturesConfiguration.name of
+                "Tempo" ->
+                    audioFeaturesConfiguration.accessor audioFeature / 2
+
+                _ ->
+                    audioFeaturesConfiguration.accessor audioFeature * 100
+
+        barWidth =
+            fromFloat percentage ++ "%"
+    in
+    div [ class "audio-feature" ]
+        [ span [] [ text audioFeaturesConfiguration.name ]
+        , div [ class "audio-feature-bar" ]
+            [ div
+                [ class "audio-feature-bar"
+                , style "width" barWidth
+                , style "background-color" audioFeaturesConfiguration.color
                 ]
+                []
+            ]
+        ]
 
 
 topArtistsView : List Artist -> Html Msg
@@ -144,10 +168,7 @@ profileView maybeProfile =
 headerView : Maybe Profile -> Html Msg
 headerView maybeProfile =
     header []
-        [ div [ id "logo-container" ]
-            [ h1 [] [ text "elmify" ]
-            , span [] [ text "Spotify stats about your listening tastes" ]
-            ]
+        [ logoView
         , profileView maybeProfile
         ]
 
@@ -164,15 +185,20 @@ mainView timeRange topArtists topTracks =
         ]
 
 
+logoView : Html Msg
+logoView =
+    div [ id "logo-container" ]
+        [ h1 [] [ text "elmify" ]
+        , span [] [ text "Spotify stats about your listening tastes" ]
+        ]
+
+
 authView : Url -> Maybe AuthDetails -> Html Msg
 authView url maybeAuthDetails =
     div
         [ id "auth-container", classList [ ( "hidden", maybeAuthDetails /= Nothing ) ] ]
         [ div [ id "auth-dialogue" ]
-            [ div [ id "logo-container" ]
-                [ h1 [] [ text "elmify" ]
-                , span [] [ text "Spotify stats about your listening tastes" ]
-                ]
+            [ logoView
             , div [ id "auth-prompt" ]
                 [ p [] [ text "First, you need to" ]
                 , a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ]

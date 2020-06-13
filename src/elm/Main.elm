@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Http exposing (Error(..))
-import List exposing (map2)
+import List exposing (map, map2)
 import Maybe exposing (withDefault)
 import Platform.Cmd exposing (batch)
 import Requests exposing (getAudioFeatures, getProfile, getUsersTopArtists, getUsersTopTracks)
@@ -130,6 +130,21 @@ update msg model =
                             batch [ getUsersTopArtists authDetails.accessToken timeRange, getUsersTopTracks authDetails.accessToken timeRange ]
             in
             ( { model | timeRange = timeRange }, cmd )
+
+        TrackExpanded track ->
+            let
+                topTracks =
+                    map
+                        (\topTrack ->
+                            if topTrack == track then
+                                { topTrack | expanded = not topTrack.expanded }
+
+                            else
+                                topTrack
+                        )
+                        model.topTracks
+            in
+            ( { model | topTracks = topTracks }, Cmd.none )
 
 
 
