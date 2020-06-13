@@ -2,8 +2,8 @@ module Views exposing (..)
 
 import Browser
 import Helper exposing (averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h1, h2, h3, header, img, li, main_, ol, p, section, span, text, ul)
-import Html.Attributes exposing (class, classList, href, id, src, style)
+import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text, ul)
+import Html.Attributes exposing (class, classList, href, id, style)
 import Html.Events exposing (onClick)
 import List exposing (any, map)
 import Maybe exposing (withDefault)
@@ -36,7 +36,7 @@ profileImage images =
 artistLi : Artist -> Html Msg
 artistLi artist =
     li []
-        [ div [] [ profileImage artist.images ]
+        [ profileImage artist.images
         , div [ class "artist-name-container" ] [ text artist.name ]
         ]
 
@@ -79,7 +79,7 @@ topArtistsView list =
                 [ text "No artists found." ]
 
             artists ->
-                [ h3 [] [ text "Your top artists" ]
+                [ h2 [] [ text "Your top artists" ]
                 , ol [] <| map artistLi artists
                 ]
 
@@ -92,7 +92,7 @@ topTracksView tracksList =
                 [ text "No tracks found." ]
 
             tracks ->
-                [ h3 [] [ text "Your top tracks" ]
+                [ h2 [] [ text "Your top tracks" ]
                 , ol [] <| map trackLi tracks
                 ]
 
@@ -113,7 +113,7 @@ userTastesView tracksList =
                     [ p [] [ text "Loading audio features..." ] ]
 
                 else
-                    [ h3 [] [ text "Your tastes" ]
+                    [ h2 [] [ text "Your tastes" ]
                     , ul []
                         [ li [] [ text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList) ]
                         , li [] [ text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList) ]
