@@ -1,6 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@600&family=Righteous&family=Roboto+Slab:wght@500&display=swap');@primary: deeppink;
+
 html {
   background-color: #212121;
   color: white;
+  font-family: 'Nunito', sans-serif;
+}
+
+body{
+  margin: 0;
+}
+
+h1{
+  font-family: 'Bree Serif', serif;
+  margin: 1rem;
+  font-size: 3.5rem;
+  width: fit-content;
 }
 
 
@@ -10,8 +24,17 @@ ul, ol {
   margin: 0;
 }
 
+div{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 li {
   counter-increment: item;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
 }
 
 ol li::before {
@@ -21,30 +44,96 @@ ol li::before {
 }
 
 .hidden {
-  display: none;
-}
-
-.active {
-  background-color: deeppink;
+  display: none !important;
 }
 
 .image-container{
   background-size: cover;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1000px;
+}
+
+#logo-container {
+  align-items: center;
+  span {
+    width: 10rem;
+    margin-top: 16px;
+    font-size: 1rem;
+  }
 }
 
 
+#auth-container {
+  position: absolute;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #61616145;
+  backdrop-filter: blur(8px);
+  #auth-dialogue {
+    align-items: center;
+    flex-direction: column;
+    #auth-prompt{
+      margin: 1rem 0;
+      justify-content: center;
+      align-items: center;
+      p {
+        font-size: 1.3rem;
+        margin: 0 0.4rem;
+      }
+    }
+  }
+
+}
+
 
 header {
+  padding: 1rem 2rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
+
   #profile-panel {
-    justify-content: end;
-    .image-container{
-      width: 4rem;
-      height: 4rem;
-      border-radius: 1000px;
+    margin: 1rem;
+    background-color: #484848;
+    border-radius: 50px;
+    padding: 4px;
+    #name-container {
+      align-items: center;
+      padding: 0 20px;
     }
+  }
+}
+
+button{
+  font-family: 'Nunito', sans-serif;
+  border: 2px solid @primary;
+  border-right-width: 0;
+  padding: 4px 20px;
+  font-size: 1rem;
+  background-color: #ffffff00;
+  color: @primary;
+  &:focus {outline:0;}
+  &:last-child {
+    border-right-width: 2px;
+    border-top-right-radius: 100px;
+    border-bottom-right-radius: 100px;
+  }
+  &:first-child {
+    border-top-left-radius: 100px;
+    border-bottom-left-radius: 100px;
+  }
+  &.active {
+    background-color: @primary;
+    color: white;
+  }
+  &:hover{
+    background-color: white;
+    border-color: white;
+    color: #212121;
   }
 }
 
@@ -52,27 +141,20 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  #timerange-picker {
+    justify-content: center;
+  }
   #top-sections {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    #top-artists {
+    section {
       padding: 1rem;
-      li {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        .image-container {
-          width: 3rem;
-          height: 3rem;
-          border-radius: 1000px;
-        }
-        .artist-name-container {
-          display: flex;
-          align-items: center;
+      &#top-artists {
+        li {
+
+          .artist-name-container {
+            align-items: center;
+          }
         }
       }
-
     }
   }
 }

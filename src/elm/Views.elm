@@ -2,7 +2,7 @@ module Views exposing (..)
 
 import Browser
 import Helper exposing (averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h1, h3, header, img, li, main_, ol, p, section, text, ul)
+import Html exposing (Html, a, button, div, h1, h2, h3, header, img, li, main_, ol, p, section, span, text, ul)
 import Html.Attributes exposing (class, classList, href, id, src, style)
 import Html.Events exposing (onClick)
 import List exposing (any, map)
@@ -15,9 +15,10 @@ import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Elmify"
+    { title = "Elmify - Spotify stats"
     , body =
-        [ headerView model.url model.authDetails model.profile
+        [ authView model.url model.authDetails
+        , headerView model.profile
         , mainView model.timeRange model.topArtists model.topTracks
         ]
     }
@@ -129,21 +130,24 @@ userTastesView tracksList =
 
 profileView : Maybe Profile -> Html Msg
 profileView maybeProfile =
-    div [ id "profile-panel" ]
-        [ case maybeProfile of
+    div [ id "profile-panel" ] <|
+        case maybeProfile of
             Nothing ->
-                div [] [ text "User not logged in." ]
+                [ div [ id "name-container" ] [ text "User not logged in." ] ]
 
             Just profile ->
-                div [] [ text profile.name, profileImage profile.images ]
-        ]
+                [ div [ id "name-container" ] [ text profile.name, a [] [ text "\u{00A0}| Logout" ] ]
+                , profileImage profile.images
+                ]
 
 
-headerView : Url -> Maybe AuthDetails -> Maybe Profile -> Html Msg
-headerView url maybeAuthDetails maybeProfile =
+headerView : Maybe Profile -> Html Msg
+headerView maybeProfile =
     header []
-        [ h1 [] [ text "Elmify" ]
-        , authView url maybeAuthDetails
+        [ div [ id "logo-container" ]
+            [ h1 [] [ text "elmify" ]
+            , span [] [ text "Spotify stats about your listening tastes" ]
+            ]
         , profileView maybeProfile
         ]
 
@@ -162,7 +166,21 @@ mainView timeRange topArtists topTracks =
 
 authView : Url -> Maybe AuthDetails -> Html Msg
 authView url maybeAuthDetails =
-    div [ classList [ ( "hidden", maybeAuthDetails /= Nothing ) ] ] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ] [ text "Spotify login" ] ]
+    div
+        [ id "auth-container", classList [ ( "hidden", maybeAuthDetails /= Nothing ) ] ]
+        [ div [ id "auth-dialogue" ]
+            [ div [ id "logo-container" ]
+                [ h1 [] [ text "elmify" ]
+                , span [] [ text "Spotify stats about your listening tastes" ]
+                ]
+            , div [ id "auth-prompt" ]
+                [ p [] [ text "First, you need to" ]
+                , a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ]
+                    [ button [] [ text "login with Spotify" ] ]
+                , p [] [ text "." ]
+                ]
+            ]
+        ]
 
 
 timeRangeSelect : TimeRange -> Html Msg
