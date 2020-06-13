@@ -1,8 +1,11 @@
 module Requests exposing (..)
 
-import Decoders exposing (artistsPagingObjectDecoder, profileDecoder, tracksPagingObjectDecoder)
+import Decoders exposing (artistsPagingObjectDecoder, audioFeaturesListDecoder, profileDecoder, tracksPagingObjectDecoder)
 import Http
-import Types exposing (Msg(..), TimeRange, TopSubject(..))
+import List exposing (map)
+import String exposing (join)
+import Types exposing (Msg(..), TimeRange, TopSubject(..), Track)
+import Url.Builder as Builder
 import UrlHelper exposing (spotifyTopUrl)
 
 
@@ -42,4 +45,20 @@ getUsersTopTracks accessToken timeRange =
         , tracker = Nothing
         , url = spotifyTopUrl TopTracks timeRange
         , expect = Http.expectJson GotTopTracks tracksPagingObjectDecoder
+        }
+
+
+getAudioFeatures : String -> List Track -> Cmd Msg
+getAudioFeatures accessToken tracks =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+        , body = Http.emptyBody
+        , timeout = Nothing
+        , tracker = Nothing
+        , url =
+            Builder.crossOrigin "https://api.spotify.com"
+                [ "v1", "audio-features" ]
+                [ Builder.string "ids" <| join "," <| map .id tracks ]
+        , expect = Http.expectJson GotAudioFeatures audioFeaturesListDecoder
         }

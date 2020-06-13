@@ -3,8 +3,10 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Http exposing (Error(..))
+import List exposing (map2)
 import Maybe exposing (withDefault)
-import Requests exposing (getProfile, getUsersTopArtists, getUsersTopTracks)
+import Platform.Cmd exposing (batch)
+import Requests exposing (getAudioFeatures, getProfile, getUsersTopArtists, getUsersTopTracks)
 import Types exposing (Artist, Docs, Model, Msg(..), Profile, TimeRange(..))
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, string)
@@ -47,13 +49,13 @@ init flags url key =
             in
             case maybeAccessToken of
                 Just accessToken ->
-                    ( Model key url (Parser.parse routeParser url) (Just { accessToken = accessToken }) Nothing [] ShortTerm [] ShortTerm, Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm ] )
+                    ( Model key url (Parser.parse routeParser url) (Just { accessToken = accessToken }) Nothing [] ShortTerm [], Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm ] )
 
                 Maybe.Nothing ->
-                    ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [] ShortTerm, Cmd.none )
+                    ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [], Cmd.none )
 
         _ ->
-            ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [] ShortTerm, Cmd.none )
+            ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [], Cmd.none )
 
 
 
@@ -93,12 +95,31 @@ update msg model =
         GotTopTracks result ->
             case result of
                 Ok pagingObject ->
-                    ( { model | topTracks = pagingObject.tracks }, Cmd.none )
+                    ( { model | topTracks = pagingObject.tracks }
+                    , case model.authDetails of
+                        Nothing ->
+                            Cmd.none
+
+                        Maybe.Just authDetails ->
+                            getAudioFeatures authDetails.accessToken pagingObject.tracks
+                    )
 
                 Err error ->
                     handleError error model
 
-        TopArtistsTimeRangeSelected timeRange ->
+        GotAudioFeatures result ->
+            case result of
+                Ok audioFeaturesList ->
+                    let
+                        topTracks =
+                            map2 (\track audioFeatures -> { track | audioFeatures = Just audioFeatures }) model.topTracks audioFeaturesList.audioFeatures
+                    in
+                    ( { model | topTracks = topTracks }, Cmd.none )
+
+                Err error ->
+                    handleError error model
+
+        TimeRangeSelected timeRange ->
             let
                 cmd =
                     case model.authDetails of
@@ -106,21 +127,9 @@ update msg model =
                             Cmd.none
 
                         Maybe.Just authDetails ->
-                            getUsersTopArtists authDetails.accessToken timeRange
+                            batch [ getUsersTopArtists authDetails.accessToken timeRange, getUsersTopTracks authDetails.accessToken timeRange ]
             in
-            ( { model | topArtistsTimeRange = timeRange }, cmd )
-
-        TopTracksTimeRangeSelected timeRange ->
-            let
-                cmd =
-                    case model.authDetails of
-                        Nothing ->
-                            Cmd.none
-
-                        Maybe.Just authDetails ->
-                            getUsersTopTracks authDetails.accessToken timeRange
-            in
-            ( { model | topTracksTimeRange = timeRange }, cmd )
+            ( { model | timeRange = timeRange }, cmd )
 
 
 

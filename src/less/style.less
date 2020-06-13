@@ -1,6 +1,25 @@
-.dispdlay {
-  display: block;
+html {
+  background-color: #212121;
+  color: white;
 }
+
+
+ul, ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  counter-increment: item;
+}
+
+ol li::before {
+  content: counter(item);
+  color: red;
+  font-weight: bold;
+}
+
 .hidden {
   display: none;
 }
@@ -8,3 +27,53 @@
 .active {
   background-color: deeppink;
 }
+
+.image-container{
+  background-size: cover;
+}
+
+
+
+header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  #profile-panel {
+    justify-content: end;
+    .image-container{
+      width: 4rem;
+      height: 4rem;
+      border-radius: 1000px;
+    }
+  }
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  #top-sections {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    #top-artists {
+      padding: 1rem;
+      li {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        .image-container {
+          width: 3rem;
+          height: 3rem;
+          border-radius: 1000px;
+        }
+        .artist-name-container {
+          display: flex;
+          align-items: center;
+        }
+      }
+
+    }
+  }
+}
+
