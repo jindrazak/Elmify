@@ -1,8 +1,8 @@
 module Helper exposing (..)
 
-import List exposing (all, any, foldl, head, length, map)
+import List exposing (any, foldl, length, map)
 import Maybe exposing (withDefault)
-import Types exposing (AudioFeatures, Image, Track, placeholderImage)
+import Types exposing (AudioFeatures, Image, Track)
 
 
 smallestImage : List Image -> Maybe Image
@@ -55,3 +55,17 @@ averageAudioFeatureValue audioFeatureAccessor tracks =
 
     else
         Just <| foldl (+) 0 values / toFloat (length values)
+
+
+normalizePercentage : AudioFeatures -> AudioFeatures
+normalizePercentage audioFeatures =
+    AudioFeatures
+        (audioFeatures.acousticness * 100)
+        (audioFeatures.danceability * 100)
+        (audioFeatures.energy * 100)
+        (audioFeatures.instrumentalness * 100)
+        (audioFeatures.liveness * 100)
+        (audioFeatures.speechiness * 100)
+        (audioFeatures.valence * 100)
+        -- Tempo normalization according to this diagram https://developer.spotify.com/assets/audio/tempo.png
+        ((audioFeatures.tempo - 50) / 1.5)

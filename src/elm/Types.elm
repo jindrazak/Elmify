@@ -74,7 +74,6 @@ type alias AudioFeatures =
     , energy : Float
     , instrumentalness : Float
     , liveness : Float
-    , loudness : Float
     , speechiness : Float
     , valence : Float
     , tempo : Float

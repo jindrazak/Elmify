@@ -1,12 +1,14 @@
 module Views exposing (..)
 
 import Browser
+import Chart exposing (chartConfig)
+import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
-import Helper exposing (averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text, ul)
+import Helper exposing (smallestImage)
+import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text)
 import Html.Attributes exposing (class, classList, href, id, style)
 import Html.Events exposing (onClick)
-import List exposing (any, map, map2)
+import List exposing (any, map)
 import Maybe exposing (withDefault)
 import String exposing (fromFloat, join)
 import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesConfiguration, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
@@ -86,12 +88,7 @@ audioFeatureView : AudioFeatures -> AudioFeaturesConfiguration -> Html Msg
 audioFeatureView audioFeature audioFeaturesConfiguration =
     let
         percentage =
-            case audioFeaturesConfiguration.name of
-                "Tempo" ->
-                    audioFeaturesConfiguration.accessor audioFeature / 2
-
-                _ ->
-                    audioFeaturesConfiguration.accessor audioFeature * 100
+            audioFeaturesConfiguration.accessor audioFeature
     in
     simpleBarView audioFeaturesConfiguration.name percentage audioFeaturesConfiguration.color
 
@@ -159,17 +156,7 @@ userTastesView tracksList =
 
                 else
                     [ h2 [] [ text "Your tastes" ]
-                    , ul []
-                        [ li [] [ text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList) ]
-                        , li [] [ text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList) ]
-                        , li [] [ text <| "Energy " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .energy tracksList) ]
-                        , li [] [ text <| "Instrumentalness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .instrumentalness tracksList) ]
-                        , li [] [ text <| "Liveness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .liveness tracksList) ]
-                        , li [] [ text <| "Loudness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .loudness tracksList) ]
-                        , li [] [ text <| "Speechiness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .speechiness tracksList) ]
-                        , li [] [ text <| "Valence " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .valence tracksList) ]
-                        , li [] [ text <| "Tempo " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .tempo tracksList) ]
-                        ]
+                    , Chart.chart [] (chartConfig tracksList)
                     ]
 
 

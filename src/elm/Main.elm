@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
+import Helper exposing (normalizePercentage)
 import Http exposing (Error(..))
 import List exposing (map, map2)
 import Maybe exposing (withDefault)
@@ -112,7 +113,7 @@ update msg model =
                 Ok audioFeaturesList ->
                     let
                         topTracks =
-                            map2 (\track audioFeatures -> { track | audioFeatures = Just audioFeatures }) model.topTracks audioFeaturesList.audioFeatures
+                            map2 (\track audioFeatures -> { track | audioFeatures = Just <| normalizePercentage audioFeatures }) model.topTracks audioFeaturesList.audioFeatures
                     in
                     ( { model | topTracks = topTracks }, Cmd.none )
 

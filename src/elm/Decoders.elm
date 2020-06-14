@@ -80,7 +80,6 @@ audioFeaturesDecoder =
         |> required "energy" Decoder.float
         |> required "instrumentalness" Decoder.float
         |> required "liveness" Decoder.float
-        |> required "loudness" Decoder.float
         |> required "speechiness" Decoder.float
         |> required "valence" Decoder.float
         |> required "tempo" Decoder.float

@@ -9,7 +9,8 @@ module.exports = {
     // define entrypoints for JavaScript and SCSS
     entry: [
         './src/index.js',
-        './src/less/style.less'
+        './src/less/style.less',
+        './node_modules/@indicatrix/elm-chartjs-webcomponent/webcomponent/chart.js'
     ],
 
     // define output
