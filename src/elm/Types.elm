@@ -35,18 +35,36 @@ type alias Artist =
     , genres : List String
     , images : List Image
     , popularity : Int
+    , expanded : Bool
     }
+
+
+
+--https://developer.spotify.com/documentation/web-api/reference/object-model/#artist-object-simplified
+
+
+type alias SimplifiedArtist =
+    { name : String }
 
 
 type alias Track =
     { id : String
     , name : String
+    , artists : List SimplifiedArtist
     , audioFeatures : Maybe AudioFeatures
+    , expanded : Bool
     }
 
 
 type alias AudioFeaturesList =
     { audioFeatures : List AudioFeatures
+    }
+
+
+type alias AudioFeaturesConfiguration =
+    { name : String
+    , accessor : AudioFeatures -> Float
+    , color : String
     }
 
 
@@ -83,6 +101,8 @@ type Msg
     | GotTopTracks (Result Http.Error TracksPagingObject)
     | GotAudioFeatures (Result Http.Error AudioFeaturesList)
     | TimeRangeSelected TimeRange
+    | TrackExpanded Track
+    | ArtistExpanded Artist
 
 
 type TimeRange

@@ -1,23 +1,25 @@
 module Views exposing (..)
 
 import Browser
+import Constants exposing (audioFeaturesConfigurations)
 import Helper exposing (averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h3, header, img, li, main_, ol, text, ul)
-import Html.Attributes exposing (class, classList, href, src)
+import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text, ul)
+import Html.Attributes exposing (class, classList, href, id, style)
 import Html.Events exposing (onClick)
-import List exposing (any, map)
+import List exposing (any, map, map2)
 import Maybe exposing (withDefault)
-import String exposing (fromFloat)
-import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
+import String exposing (fromFloat, join)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesConfiguration, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
 import Url exposing (Url)
 import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Elmify"
+    { title = "Elmify - Spotify stats"
     , body =
-        [ headerView model.url model.authDetails model.profile
+        [ authView model.url model.authDetails
+        , headerView model.profile
         , mainView model.timeRange model.topArtists model.topTracks
         ]
     }
@@ -29,69 +31,113 @@ profileImage images =
         image =
             withDefault placeholderImage <| smallestImage images
     in
-    img [ src image.url ] []
+    div [ class "image-container", style "background-image" <| "url(" ++ image.url ++ ")" ] []
 
 
 artistLi : Artist -> Html Msg
 artistLi artist =
-    li []
-        [ div [] [ profileImage artist.images ]
-        , div [] [ text artist.name ]
+    li [ onClick <| ArtistExpanded artist ]
+        [ div [ class "artist-container" ]
+            [ profileImage artist.images
+            , p [] [ text <| artist.name ]
+            ]
+        , artistDetails artist
+        ]
+
+
+artistDetails : Artist -> Html Msg
+artistDetails artist =
+    div [ class "expandable", classList [ ( "expanded", artist.expanded ) ] ]
+        [ popularityView artist
+        , p []
+            [ p []
+                [ text "Genres: "
+                , span [ class "genres" ] [ text <| join ", " artist.genres ]
+                ]
+            ]
         ]
 
 
 trackLi : Track -> Html Msg
 trackLi track =
-    li []
-        [ div []
-            [ text track.name
-            , audioFeaturesView track.audioFeatures
+    li [ onClick <| TrackExpanded track ]
+        [ div [ class "track-container" ]
+            [ p []
+                [ text <| track.name
+                , span [] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
+                ]
+            ]
+        , trackDetails track
+        ]
+
+
+trackDetails : Track -> Html Msg
+trackDetails track =
+    div [ class "expandable", classList [ ( "expanded", track.expanded ) ] ] <|
+        case track.audioFeatures of
+            Nothing ->
+                []
+
+            Just audioFeatures ->
+                map (audioFeatureView audioFeatures) audioFeaturesConfigurations
+
+
+audioFeatureView : AudioFeatures -> AudioFeaturesConfiguration -> Html Msg
+audioFeatureView audioFeature audioFeaturesConfiguration =
+    let
+        percentage =
+            case audioFeaturesConfiguration.name of
+                "Tempo" ->
+                    audioFeaturesConfiguration.accessor audioFeature / 2
+
+                _ ->
+                    audioFeaturesConfiguration.accessor audioFeature * 100
+    in
+    simpleBarView audioFeaturesConfiguration.name percentage audioFeaturesConfiguration.color
+
+
+popularityView : Artist -> Html Msg
+popularityView artist =
+    simpleBarView "Popularity" (toFloat artist.popularity) "#ff1493"
+
+
+simpleBarView : String -> Float -> String -> Html Msg
+simpleBarView name percentage color =
+    div [ class "simple-bar-container" ]
+        [ p [] [ text name ]
+        , div [ class "simple-bar" ]
+            [ div
+                [ class "simple-bar"
+                , style "width" <| fromFloat percentage ++ "%"
+                , style "background-color" color
+                ]
+                []
             ]
         ]
 
 
-audioFeaturesView : Maybe AudioFeatures -> Html Msg
-audioFeaturesView maybeAudioFeatures =
-    case maybeAudioFeatures of
-        Nothing ->
-            div [] []
-
-        Just audioFeatures ->
-            div []
-                [ div [] [ text <| "Acousticness" ++ fromFloat audioFeatures.acousticness ]
-                , div [] [ text <| "Danceability" ++ fromFloat audioFeatures.danceability ]
-                , div [] [ text <| "Energy" ++ fromFloat audioFeatures.energy ]
-                , div [] [ text <| "Instrumentalness" ++ fromFloat audioFeatures.instrumentalness ]
-                , div [] [ text <| "Liveness" ++ fromFloat audioFeatures.liveness ]
-                , div [] [ text <| "Loudness" ++ fromFloat audioFeatures.loudness ]
-                , div [] [ text <| "Speechiness" ++ fromFloat audioFeatures.speechiness ]
-                , div [] [ text <| "Valence" ++ fromFloat audioFeatures.valence ]
-                , div [] [ text <| "Tempo" ++ fromFloat audioFeatures.tempo ]
-                ]
-
-
 topArtistsView : List Artist -> Html Msg
 topArtistsView list =
-    case list of
-        [] ->
-            div [] [ text "No artists found." ]
+    section [ id "top-artists" ] <|
+        case list of
+            [] ->
+                [ text "No artists found." ]
 
-        artists ->
-            div []
-                [ h3 [] [ text "Your top artists" ]
+            artists ->
+                [ h2 [] [ text "Your top artists" ]
                 , ol [] <| map artistLi artists
                 ]
 
 
 topTracksView : List Track -> Html Msg
 topTracksView tracksList =
-    case tracksList of
-        [] ->
-            div [] [ text "No tracks found." ]
+    section [ id "top-tracks" ] <|
+        case tracksList of
+            [] ->
+                [ text "No tracks found." ]
 
-        tracks ->
-            div []
-                [ h3 [] [ text "Your top tracks" ]
+            tracks ->
+                [ h2 [] [ text "Your top tracks" ]
                 , ol [] <| map trackLi tracks
                 ]
 
@@ -102,17 +148,17 @@ userTastesView tracksList =
         maybeAudioFeatures =
             map .audioFeatures tracksList
     in
-    case tracksList of
-        [] ->
-            div [] [ text "No tracks found." ]
+    section [ id "users-tastes" ] <|
+        case tracksList of
+            [] ->
+                [ text "No tracks found." ]
 
-        _ ->
-            if any (\x -> x == Nothing) maybeAudioFeatures then
-                text "Loading audio features..."
+            _ ->
+                if any (\x -> x == Nothing) maybeAudioFeatures then
+                    [ p [] [ text "Loading audio features..." ] ]
 
-            else
-                div []
-                    [ h3 [] [ text "Your tastes" ]
+                else
+                    [ h2 [] [ text "Your tastes" ]
                     , ul []
                         [ li [] [ text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList) ]
                         , li [] [ text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList) ]
@@ -129,23 +175,22 @@ userTastesView tracksList =
 
 profileView : Maybe Profile -> Html Msg
 profileView maybeProfile =
-    div []
-        [ case maybeProfile of
+    div [ id "profile-panel" ] <|
+        case maybeProfile of
             Nothing ->
-                div [] [ text "User not logged in." ]
+                [ div [ id "name-container" ] [ text "User not logged in." ] ]
 
             Just profile ->
-                div [] [ text profile.name, profileImage profile.images ]
-        ]
+                [ div [ id "name-container" ] [ text profile.name, a [] [ text "\u{00A0}| Logout" ] ]
+                , profileImage profile.images
+                ]
 
 
-headerView : Url -> Maybe AuthDetails -> Maybe Profile -> Html Msg
-headerView url maybeAuthDetails maybeProfile =
+headerView : Maybe Profile -> Html Msg
+headerView maybeProfile =
     header []
-        [ div []
-            [ authView url maybeAuthDetails
-            , profileView maybeProfile
-            ]
+        [ logoView
+        , profileView maybeProfile
         ]
 
 
@@ -153,30 +198,42 @@ mainView : TimeRange -> List Artist -> List Track -> Html Msg
 mainView timeRange topArtists topTracks =
     main_ []
         [ timeRangeSelect timeRange
-        , topArtistsView topArtists
-        , topTracksView topTracks
-        , userTastesView topTracks
+        , div [ id "top-sections" ]
+            [ topArtistsView topArtists
+            , topTracksView topTracks
+            , userTastesView topTracks
+            ]
+        ]
+
+
+logoView : Html Msg
+logoView =
+    div [ id "logo-container" ]
+        [ h1 [] [ text "elmify" ]
+        , p [] [ text "Spotify stats about your listening tastes" ]
         ]
 
 
 authView : Url -> Maybe AuthDetails -> Html Msg
 authView url maybeAuthDetails =
-    let
-        displayed =
-            case maybeAuthDetails of
-                Nothing ->
-                    "display"
-
-                Just _ ->
-                    "hidden"
-    in
-    div [ class displayed ] [ a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ] [ text "Spotify login" ] ]
+    div
+        [ id "auth-container", classList [ ( "hidden", maybeAuthDetails /= Nothing ) ] ]
+        [ div [ id "auth-dialogue" ]
+            [ logoView
+            , div [ id "auth-prompt" ]
+                [ p [] [ text "First, you need to" ]
+                , a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ]
+                    [ button [] [ text "login with Spotify" ] ]
+                , p [] [ text "." ]
+                ]
+            ]
+        ]
 
 
 timeRangeSelect : TimeRange -> Html Msg
 timeRangeSelect timeRange =
-    ol []
-        [ li [] [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ] ]
-        , li [] [ button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ] ]
+    div [ id "timerange-picker" ]
+        [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ]
+        , button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ]
+        , button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ]
         ]
