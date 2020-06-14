@@ -1,12 +1,14 @@
 module Views exposing (..)
 
 import Browser
+import Chart exposing (chartConfig, trackData, tracksAverageData)
+import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
-import Helper exposing (averageAudioFeatureValue, smallestImage)
-import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text, ul)
-import Html.Attributes exposing (class, classList, href, id, style)
-import Html.Events exposing (onClick)
-import List exposing (any, map, map2)
+import Helper exposing (smallestImage)
+import Html exposing (Html, a, button, div, footer, h1, h2, h3, header, input, li, main_, ol, p, section, span, text)
+import Html.Attributes exposing (class, classList, href, id, placeholder, style, value, width)
+import Html.Events exposing (onClick, onInput, onMouseDown)
+import List exposing (any, map)
 import Maybe exposing (withDefault)
 import String exposing (fromFloat, join)
 import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesConfiguration, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
@@ -20,7 +22,8 @@ view model =
     , body =
         [ authView model.url model.authDetails
         , headerView model.profile
-        , mainView model.timeRange model.topArtists model.topTracks
+        , mainView model
+        , footerView
         ]
     }
 
@@ -36,7 +39,7 @@ profileImage images =
 
 artistLi : Artist -> Html Msg
 artistLi artist =
-    li [ onClick <| ArtistExpanded artist ]
+    li [ onMouseDown <| ArtistExpanded artist ]
         [ div [ class "artist-container" ]
             [ profileImage artist.images
             , p [] [ text <| artist.name ]
@@ -58,16 +61,16 @@ artistDetails artist =
         ]
 
 
-trackLi : Track -> Html Msg
-trackLi track =
-    li [ onClick <| TrackExpanded track ]
+trackLi : Msg -> (Track -> Html Msg) -> Track -> Html Msg
+trackLi clickCmd detailsContainer track =
+    li [ onClick <| clickCmd ]
         [ div [ class "track-container" ]
             [ p []
                 [ text <| track.name
                 , span [] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
                 ]
             ]
-        , trackDetails track
+        , detailsContainer track
         ]
 
 
@@ -86,12 +89,7 @@ audioFeatureView : AudioFeatures -> AudioFeaturesConfiguration -> Html Msg
 audioFeatureView audioFeature audioFeaturesConfiguration =
     let
         percentage =
-            case audioFeaturesConfiguration.name of
-                "Tempo" ->
-                    audioFeaturesConfiguration.accessor audioFeature / 2
-
-                _ ->
-                    audioFeaturesConfiguration.accessor audioFeature * 100
+            audioFeaturesConfiguration.accessor audioFeature
     in
     simpleBarView audioFeaturesConfiguration.name percentage audioFeaturesConfiguration.color
 
@@ -137,19 +135,31 @@ topTracksView tracksList =
                 [ text "No tracks found." ]
 
             tracks ->
-                [ h2 [] [ text "Your top tracks" ]
-                , ol [] <| map trackLi tracks
+                [ h2 []
+                    [ text "Your top tracks", audioFeaturesHelpDalogue ]
+                , ol [] <| map (\track -> trackLi (TrackExpanded track) trackDetails track) tracks
                 ]
 
 
-userTastesView : List Track -> Html Msg
-userTastesView tracksList =
+audioFeaturesHelpDalogue : Html Msg
+audioFeaturesHelpDalogue =
+    span [ class "help" ]
+        [ text "?"
+        , div [ class "help-container" ] <|
+            map
+                (\audioFeaturesConfiguration -> div [] [ p [] [ span [] [ text <| audioFeaturesConfiguration.name ++ ": " ], text audioFeaturesConfiguration.description ] ])
+                audioFeaturesConfigurations
+        ]
+
+
+userTastesView : Model -> Html Msg
+userTastesView model =
     let
         maybeAudioFeatures =
-            map .audioFeatures tracksList
+            map .audioFeatures model.topTracks
     in
     section [ id "users-tastes" ] <|
-        case tracksList of
+        case model.topTracks of
             [] ->
                 [ text "No tracks found." ]
 
@@ -158,19 +168,32 @@ userTastesView tracksList =
                     [ p [] [ text "Loading audio features..." ] ]
 
                 else
-                    [ h2 [] [ text "Your tastes" ]
-                    , ul []
-                        [ li [] [ text <| "Acousticness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .acousticness tracksList) ]
-                        , li [] [ text <| "Danceability " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .danceability tracksList) ]
-                        , li [] [ text <| "Energy " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .energy tracksList) ]
-                        , li [] [ text <| "Instrumentalness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .instrumentalness tracksList) ]
-                        , li [] [ text <| "Liveness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .liveness tracksList) ]
-                        , li [] [ text <| "Loudness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .loudness tracksList) ]
-                        , li [] [ text <| "Speechiness " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .speechiness tracksList) ]
-                        , li [] [ text <| "Valence " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .valence tracksList) ]
-                        , li [] [ text <| "Tempo " ++ fromFloat (withDefault 0 <| averageAudioFeatureValue .tempo tracksList) ]
-                        ]
+                    [ h2 [] [ text "Your tastes", audioFeaturesHelpDalogue ]
+                    , Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
+                    , h2 [] [ text "Search" ]
+                    , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
+                    , case model.searchTracks of
+                        [] ->
+                            chartTrackView model
+
+                        searchTracks ->
+                            ol [] <| map (\track -> trackLi (SelectedSearchedTrack track) trackDetails track) searchTracks
                     ]
+
+
+chartTrackView : Model -> Html Msg
+chartTrackView model =
+    case model.searchedTrack of
+        Nothing ->
+            div [] [ p [] [ text "No results." ] ]
+
+        Just track ->
+            case track.audioFeatures of
+                Nothing ->
+                    text "Loading audio features"
+
+                Just audioFeatures ->
+                    Chart.chart [] (chartConfig <| trackData audioFeatures)
 
 
 profileView : Maybe Profile -> Html Msg
@@ -181,7 +204,7 @@ profileView maybeProfile =
                 [ div [ id "name-container" ] [ text "User not logged in." ] ]
 
             Just profile ->
-                [ div [ id "name-container" ] [ text profile.name, a [] [ text "\u{00A0}| Logout" ] ]
+                [ div [ id "name-container" ] [ text profile.name, a [ onClick Logout ] [ text "\u{00A0}| Logout" ] ]
                 , profileImage profile.images
                 ]
 
@@ -194,14 +217,14 @@ headerView maybeProfile =
         ]
 
 
-mainView : TimeRange -> List Artist -> List Track -> Html Msg
-mainView timeRange topArtists topTracks =
+mainView : Model -> Html Msg
+mainView model =
     main_ []
-        [ timeRangeSelect timeRange
+        [ timeRangeSelect model.timeRange
         , div [ id "top-sections" ]
-            [ topArtistsView topArtists
-            , topTracksView topTracks
-            , userTastesView topTracks
+            [ topArtistsView model.topArtists
+            , topTracksView model.topTracks
+            , userTastesView model
             ]
         ]
 
@@ -236,4 +259,18 @@ timeRangeSelect timeRange =
         [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ]
         , button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ]
         , button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ]
+        ]
+
+
+footerView : Html Msg
+footerView =
+    footer []
+        [ p []
+            [ text "Created as a semestral project by Jindrich Zak during course MI-AFP at "
+            , a [ href "https://fit.cvut.cz" ] [ text "CTU in Prague" ]
+            , text ". Made using "
+            , a [ href "https://elm-lang.org/" ] [ text "Elm" ]
+            , text ". Source code on "
+            , a [ href "https://github.com/jindrazak/elmify" ] [ text "GitHub." ]
+            ]
         ]

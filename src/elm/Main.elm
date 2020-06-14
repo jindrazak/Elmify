@@ -1,12 +1,15 @@
 module Main exposing (main)
 
 import Browser
-import Browser.Navigation as Nav
+import Browser.Navigation as Nav exposing (pushUrl, replaceUrl)
+import Constants exposing (defaultModel)
+import Helper exposing (normalizePercentage)
 import Http exposing (Error(..))
 import List exposing (map, map2)
 import Maybe exposing (withDefault)
 import Platform.Cmd exposing (batch)
-import Requests exposing (getAudioFeatures, getProfile, getUsersTopArtists, getUsersTopTracks)
+import Requests exposing (getAudioFeatures, getProfile, getSearchedTrackAudioFeatures, getTrackSearch, getUsersTopArtists, getUsersTopTracks)
+import String exposing (length)
 import Types exposing (Artist, Docs, Model, Msg(..), Profile, TimeRange(..))
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, string)
@@ -41,6 +44,10 @@ routeParser =
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
+    let
+        model =
+            defaultModel key url
+    in
     case Parser.parse routeParser url of
         Just ( "login-redirect", fragment ) ->
             let
@@ -49,13 +56,15 @@ init flags url key =
             in
             case maybeAccessToken of
                 Just accessToken ->
-                    ( Model key url (Parser.parse routeParser url) (Just { accessToken = accessToken }) Nothing [] ShortTerm [], Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm ] )
+                    ( { model | route = Parser.parse routeParser url, authDetails = Just { accessToken = accessToken } }
+                    , Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm, pushUrl key "/" ]
+                    )
 
                 Maybe.Nothing ->
-                    ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [], Cmd.none )
+                    ( { model | route = Parser.parse routeParser url }, Cmd.none )
 
         _ ->
-            ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [], Cmd.none )
+            ( { model | route = Parser.parse routeParser url }, Cmd.none )
 
 
 
@@ -112,7 +121,7 @@ update msg model =
                 Ok audioFeaturesList ->
                     let
                         topTracks =
-                            map2 (\track audioFeatures -> { track | audioFeatures = Just audioFeatures }) model.topTracks audioFeaturesList.audioFeatures
+                            map2 (\track audioFeatures -> { track | audioFeatures = Just <| normalizePercentage audioFeatures }) model.topTracks audioFeaturesList.audioFeatures
                     in
                     ( { model | topTracks = topTracks }, Cmd.none )
 
@@ -160,6 +169,66 @@ update msg model =
                         model.topArtists
             in
             ( { model | topArtists = topArtists }, Cmd.none )
+
+        GotSearchTracks result ->
+            case result of
+                Ok pagingObject ->
+                    ( { model | searchTracks = pagingObject.tracksPo.tracks }, Cmd.none )
+
+                Err error ->
+                    handleError error model
+
+        SearchInputChanged searchQuery ->
+            let
+                cmd =
+                    case model.authDetails of
+                        Nothing ->
+                            Cmd.none
+
+                        Maybe.Just authDetails ->
+                            if length searchQuery > 0 then
+                                getTrackSearch authDetails.accessToken searchQuery
+
+                            else
+                                Cmd.none
+            in
+            ( { model | searchQuery = searchQuery, searchedTrack = Nothing }, cmd )
+
+        SelectedSearchedTrack searchedTrack ->
+            let
+                cmd =
+                    case model.authDetails of
+                        Nothing ->
+                            Cmd.none
+
+                        Maybe.Just authDetails ->
+                            getSearchedTrackAudioFeatures authDetails.accessToken searchedTrack
+            in
+            ( { model | searchedTrack = Just searchedTrack, searchTracks = [], searchQuery = searchedTrack.name }, cmd )
+
+        GotSearchedTrackAudioFeatures result ->
+            case result of
+                Ok audioFeatures ->
+                    let
+                        updatedSearchedTrack =
+                            case model.searchedTrack of
+                                Nothing ->
+                                    Nothing
+
+                                Just searchedTrack ->
+                                    Just { searchedTrack | audioFeatures = Just (normalizePercentage audioFeatures) }
+                    in
+                    ( { model | searchedTrack = updatedSearchedTrack }, Cmd.none )
+
+                Err error ->
+                    handleError error model
+
+        Logout ->
+            let
+                cleanModel =
+                    defaultModel model.key model.url
+            in
+            ( { cleanModel | route = model.route }, pushUrl model.key "/logout" )
 
 
 

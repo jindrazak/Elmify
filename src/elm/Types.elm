@@ -30,6 +30,14 @@ type alias TracksPagingObject =
     { tracks : List Track }
 
 
+
+--Returned from https://api.spotify.com/v1/search
+
+
+type alias SearchTracksPagingObject =
+    { tracksPo : TracksPagingObject }
+
+
 type alias Artist =
     { name : String
     , genres : List String
@@ -65,6 +73,7 @@ type alias AudioFeaturesConfiguration =
     { name : String
     , accessor : AudioFeatures -> Float
     , color : String
+    , description : String
     }
 
 
@@ -74,7 +83,6 @@ type alias AudioFeatures =
     , energy : Float
     , instrumentalness : Float
     , liveness : Float
-    , loudness : Float
     , speechiness : Float
     , valence : Float
     , tempo : Float
@@ -90,6 +98,9 @@ type alias Model =
     , topArtists : List Artist
     , timeRange : TimeRange
     , topTracks : List Track
+    , searchTracks : List Track
+    , searchQuery : String
+    , searchedTrack : Maybe Track
     }
 
 
@@ -99,10 +110,15 @@ type Msg
     | GotProfile (Result Http.Error Profile)
     | GotTopArtists (Result Http.Error ArtistsPagingObject)
     | GotTopTracks (Result Http.Error TracksPagingObject)
+    | GotSearchTracks (Result Http.Error SearchTracksPagingObject)
     | GotAudioFeatures (Result Http.Error AudioFeaturesList)
+    | GotSearchedTrackAudioFeatures (Result Http.Error AudioFeatures)
     | TimeRangeSelected TimeRange
     | TrackExpanded Track
     | ArtistExpanded Artist
+    | SearchInputChanged String
+    | SelectedSearchedTrack Track
+    | Logout
 
 
 type TimeRange
