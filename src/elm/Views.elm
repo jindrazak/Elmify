@@ -204,7 +204,7 @@ profileView maybeProfile =
                 [ div [ id "name-container" ] [ text "User not logged in." ] ]
 
             Just profile ->
-                [ div [ id "name-container" ] [ text profile.name, a [] [ text "\u{00A0}| Logout" ] ]
+                [ div [ id "name-container" ] [ text profile.name, a [ onClick Logout ] [ text "\u{00A0}| Logout" ] ]
                 , profileImage profile.images
                 ]
 

@@ -118,6 +118,7 @@ type Msg
     | ArtistExpanded Artist
     | SearchInputChanged String
     | SelectedSearchedTrack Track
+    | Logout
 
 
 type TimeRange

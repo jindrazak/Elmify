@@ -1,8 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@600&family=Righteous&family=Roboto+Slab:wght@500&display=swap');@primary: deeppink;
+@import url('https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@600&family=Righteous&family=Roboto+Slab:wght@500&display=swap');
+
+@primary: deeppink;
+@darkgrey: #212121;
 
 html {
   height: 100%;
-  background-color: #212121;
+  background-color: @darkgrey;
   color: white;
   font-family: 'Nunito', sans-serif;
 }
@@ -271,6 +274,13 @@ main {
   }
 }
 
+a{
+  cursor:pointer;
+  &:hover{
+    color: @primary;
+  }
+}
+
 footer {
   margin-top: 3rem;
   background-color: #ff1493;
@@ -280,6 +290,11 @@ footer {
   width: 100%;
   justify-content: center;
   box-sizing: border-box;
+  a:hover{
+    &:hover{
+      color: @darkgrey;
+    }
+  }
 }
 
 span{

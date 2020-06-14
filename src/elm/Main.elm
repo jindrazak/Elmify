@@ -1,7 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import Browser.Navigation as Nav
+import Browser.Navigation as Nav exposing (pushUrl, replaceUrl)
+import Constants exposing (defaultModel)
 import Helper exposing (normalizePercentage)
 import Http exposing (Error(..))
 import List exposing (map, map2)
@@ -43,6 +44,10 @@ routeParser =
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
+    let
+        model =
+            defaultModel key url
+    in
     case Parser.parse routeParser url of
         Just ( "login-redirect", fragment ) ->
             let
@@ -51,13 +56,15 @@ init flags url key =
             in
             case maybeAccessToken of
                 Just accessToken ->
-                    ( Model key url (Parser.parse routeParser url) (Just { accessToken = accessToken }) Nothing [] ShortTerm [] [] "" Nothing, Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm ] )
+                    ( { model | route = Parser.parse routeParser url, authDetails = Just { accessToken = accessToken } }
+                    , Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm, pushUrl key "/" ]
+                    )
 
                 Maybe.Nothing ->
-                    ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [] [] "" Nothing, Cmd.none )
+                    ( { model | route = Parser.parse routeParser url }, Cmd.none )
 
         _ ->
-            ( Model key url (Parser.parse routeParser url) Nothing Nothing [] ShortTerm [] [] "" Nothing, Cmd.none )
+            ( { model | route = Parser.parse routeParser url }, Cmd.none )
 
 
 
@@ -215,6 +222,13 @@ update msg model =
 
                 Err error ->
                     handleError error model
+
+        Logout ->
+            let
+                cleanModel =
+                    defaultModel model.key model.url
+            in
+            ( { cleanModel | route = model.route }, pushUrl model.key "/logout" )
 
 
 

@@ -1,6 +1,8 @@
 module Constants exposing (..)
 
-import Types exposing (AudioFeaturesConfiguration)
+import Browser.Navigation as Nav
+import Types exposing (AudioFeaturesConfiguration, Model, TimeRange(..))
+import Url exposing (Url)
 
 
 audioFeaturesConfigurations : List AudioFeaturesConfiguration
@@ -11,3 +13,8 @@ audioFeaturesConfigurations =
     , AudioFeaturesConfiguration "Valence" .valence "#ff1493" "Describes the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric)."
     , AudioFeaturesConfiguration "Tempo" .tempo "#ff1493" "The overall estimated tempo of a track"
     ]
+
+
+defaultModel : Nav.Key -> Url -> Model
+defaultModel key url =
+    Model key url Nothing Nothing Nothing [] ShortTerm [] [] "" Nothing
