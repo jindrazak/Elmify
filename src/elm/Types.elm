@@ -73,6 +73,7 @@ type alias AudioFeaturesConfiguration =
     { name : String
     , accessor : AudioFeatures -> Float
     , color : String
+    , description : String
     }
 
 

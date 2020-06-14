@@ -1,12 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@600&family=Righteous&family=Roboto+Slab:wght@500&display=swap');@primary: deeppink;
 
 html {
+  height: 100%;
   background-color: #212121;
   color: white;
   font-family: 'Nunito', sans-serif;
 }
 
 body{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   margin: 0;
 }
 
@@ -16,6 +20,42 @@ h1{
   font-size: 3.5rem;
   width: fit-content;
 }
+
+h2 {
+  display: flex;
+  .help{
+    border: 1px solid deeppink;
+    border-radius: 50px;
+    width: 1.3rem;
+    height: 1.3rem;
+    color: white;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    justify-self: center;
+    margin-left: 0.5rem;
+    &:hover{
+      .help-container{
+        span{
+          font-size: 1.2rem;
+        }
+        font-size: 1rem;
+        background-color: #484848;
+        width: 25rem;
+        position: absolute;
+        display: block;
+        padding: 1.3rem;
+        border-radius: 9px;
+      }
+    }
+    .help-container{
+      display: none;
+    }
+  }
+}
+
+
 
 ::selection {
   background: #a3214a;
@@ -31,6 +71,7 @@ div{
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 li {
@@ -179,9 +220,10 @@ button{
 }
 
 main {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   #timerange-picker {
     justify-content: center;
   }
@@ -227,6 +269,17 @@ main {
       }
     }
   }
+}
+
+footer {
+  margin-top: 3rem;
+  background-color: #ff1493;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 span{

@@ -5,7 +5,7 @@ import Chart exposing (chartConfig, trackData, tracksAverageData)
 import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
 import Helper exposing (smallestImage)
-import Html exposing (Html, a, button, div, h1, h2, header, input, li, main_, ol, p, section, span, text)
+import Html exposing (Html, a, button, div, footer, h1, h2, h3, header, input, li, main_, ol, p, section, span, text)
 import Html.Attributes exposing (class, classList, href, id, placeholder, style, value, width)
 import Html.Events exposing (onClick, onInput, onMouseDown)
 import List exposing (any, map)
@@ -23,6 +23,7 @@ view model =
         [ authView model.url model.authDetails
         , headerView model.profile
         , mainView model
+        , footerView
         ]
     }
 
@@ -134,9 +135,21 @@ topTracksView tracksList =
                 [ text "No tracks found." ]
 
             tracks ->
-                [ h2 [] [ text "Your top tracks" ]
+                [ h2 []
+                    [ text "Your top tracks", audioFeaturesHelpDalogue ]
                 , ol [] <| map (\track -> trackLi (TrackExpanded track) trackDetails track) tracks
                 ]
+
+
+audioFeaturesHelpDalogue : Html Msg
+audioFeaturesHelpDalogue =
+    span [ class "help" ]
+        [ text "?"
+        , div [ class "help-container" ] <|
+            map
+                (\audioFeaturesConfiguration -> div [] [ p [] [ span [] [ text <| audioFeaturesConfiguration.name ++ ": " ], text audioFeaturesConfiguration.description ] ])
+                audioFeaturesConfigurations
+        ]
 
 
 userTastesView : Model -> Html Msg
@@ -155,7 +168,7 @@ userTastesView model =
                     [ p [] [ text "Loading audio features..." ] ]
 
                 else
-                    [ h2 [] [ text "Your tastes" ]
+                    [ h2 [] [ text "Your tastes", audioFeaturesHelpDalogue ]
                     , Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
                     , h2 [] [ text "Search" ]
                     , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
@@ -246,4 +259,18 @@ timeRangeSelect timeRange =
         [ button [ classList [ ( "active", timeRange == ShortTerm ) ], onClick <| TimeRangeSelected ShortTerm ] [ text "Short term (4 weeks)" ]
         , button [ classList [ ( "active", timeRange == MediumTerm ) ], onClick <| TimeRangeSelected MediumTerm ] [ text "Medium term (6 months)" ]
         , button [ classList [ ( "active", timeRange == LongTerm ) ], onClick <| TimeRangeSelected LongTerm ] [ text "Long term (several years)" ]
+        ]
+
+
+footerView : Html Msg
+footerView =
+    footer []
+        [ p []
+            [ text "Created as a semestral project by Jindrich Zak during course MI-AFP at "
+            , a [ href "https://fit.cvut.cz" ] [ text "CTU in Prague" ]
+            , text ". Made using "
+            , a [ href "https://elm-lang.org/" ] [ text "Elm" ]
+            , text ". Source code on "
+            , a [ href "https://github.com/jindrazak/elmify" ] [ text "GitHub." ]
+            ]
         ]
