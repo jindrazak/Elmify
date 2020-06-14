@@ -2,7 +2,7 @@ module Decoders exposing (..)
 
 import Json.Decode as Decoder exposing (Decoder)
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesList, Image, Profile, SimplifiedArtist, Track, TracksPagingObject)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesList, Image, Profile, SearchTracksPagingObject, SimplifiedArtist, Track, TracksPagingObject)
 
 
 profileDecoder : Decoder Profile
@@ -26,6 +26,12 @@ tracksPagingObjectDecoder : Decoder TracksPagingObject
 tracksPagingObjectDecoder =
     Decoder.succeed TracksPagingObject
         |> required "items" (Decoder.list trackDecoder)
+
+
+searchTracksPagingObjectDecoder : Decoder SearchTracksPagingObject
+searchTracksPagingObjectDecoder =
+    Decoder.succeed SearchTracksPagingObject
+        |> required "tracks" tracksPagingObjectDecoder
 
 
 audioFeaturesListDecoder : Decoder AudioFeaturesList

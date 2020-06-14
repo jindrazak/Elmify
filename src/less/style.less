@@ -17,6 +17,9 @@ h1{
   width: fit-content;
 }
 
+::selection {
+  background: #a3214a;
+}
 
 ul, ol {
   list-style: none;
@@ -31,6 +34,7 @@ div{
 }
 
 li {
+  cursor: pointer;
   counter-increment: item;
   display: flex;
   flex-direction: column;
@@ -51,6 +55,19 @@ li>div:first-child:before {
 
 p {
   margin: 0;
+}
+
+input{
+  font-family: 'Nunito', sans-serif;
+  border: 2px solid @primary;
+  border-radius: 100px;
+  padding: 4px 20px;
+  font-size: 1rem;
+  background-color: #ffffff00;
+  color: @primary;
+  margin-bottom: 1rem;
+  &:focus {outline:0;}
+  &:hover{border-color: white;}
 }
 
 .hidden {
@@ -120,10 +137,15 @@ header {
 }
 
 .expandable{
-  display: none;
+  height: 0;
+  visibility: hidden;
+  opacity: 0;
   margin: 0 2rem;
+  transition: visibility 0s, opacity 0.5s linear;
   &.expanded{
-    display: inherit;
+    height: auto;
+    visibility: visible;
+    opacity: 1;
   }
 }
 
@@ -169,8 +191,10 @@ main {
     }
     section {
       padding: 1rem;
+      display: flex;
+      flex-direction: column;
       &#top-artists {
-        width: 25%;
+        width: 22%;
         li {
           .artist-container{
             align-items: center;
@@ -186,13 +210,19 @@ main {
         }
       }
       &#top-tracks{
-        width: 50%;
+        width: 45%;
         .track-container {
           width: 100%;
           p{
             margin-top: 0.4rem;
             margin-bottom: 0.4rem;
           }
+        }
+      }
+      &#users-tastes{
+        width: 25%;
+        chart-component {
+          min-height: 30vh;
         }
       }
     }

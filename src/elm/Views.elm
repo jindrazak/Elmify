@@ -1,13 +1,13 @@
 module Views exposing (..)
 
 import Browser
-import Chart exposing (chartConfig)
+import Chart exposing (chartConfig, trackData, tracksAverageData)
 import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
 import Helper exposing (smallestImage)
-import Html exposing (Html, a, button, div, h1, h2, header, li, main_, ol, p, section, span, text)
-import Html.Attributes exposing (class, classList, href, id, style)
-import Html.Events exposing (onClick)
+import Html exposing (Html, a, button, div, h1, h2, header, input, li, main_, ol, p, section, span, text)
+import Html.Attributes exposing (class, classList, href, id, placeholder, style, value, width)
+import Html.Events exposing (onClick, onInput, onMouseDown)
 import List exposing (any, map)
 import Maybe exposing (withDefault)
 import String exposing (fromFloat, join)
@@ -22,7 +22,7 @@ view model =
     , body =
         [ authView model.url model.authDetails
         , headerView model.profile
-        , mainView model.timeRange model.topArtists model.topTracks
+        , mainView model
         ]
     }
 
@@ -38,7 +38,7 @@ profileImage images =
 
 artistLi : Artist -> Html Msg
 artistLi artist =
-    li [ onClick <| ArtistExpanded artist ]
+    li [ onMouseDown <| ArtistExpanded artist ]
         [ div [ class "artist-container" ]
             [ profileImage artist.images
             , p [] [ text <| artist.name ]
@@ -60,16 +60,16 @@ artistDetails artist =
         ]
 
 
-trackLi : Track -> Html Msg
-trackLi track =
-    li [ onClick <| TrackExpanded track ]
+trackLi : Msg -> (Track -> Html Msg) -> Track -> Html Msg
+trackLi clickCmd detailsContainer track =
+    li [ onClick <| clickCmd ]
         [ div [ class "track-container" ]
             [ p []
                 [ text <| track.name
                 , span [] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
                 ]
             ]
-        , trackDetails track
+        , detailsContainer track
         ]
 
 
@@ -135,18 +135,18 @@ topTracksView tracksList =
 
             tracks ->
                 [ h2 [] [ text "Your top tracks" ]
-                , ol [] <| map trackLi tracks
+                , ol [] <| map (\track -> trackLi (TrackExpanded track) trackDetails track) tracks
                 ]
 
 
-userTastesView : List Track -> Html Msg
-userTastesView tracksList =
+userTastesView : Model -> Html Msg
+userTastesView model =
     let
         maybeAudioFeatures =
-            map .audioFeatures tracksList
+            map .audioFeatures model.topTracks
     in
     section [ id "users-tastes" ] <|
-        case tracksList of
+        case model.topTracks of
             [] ->
                 [ text "No tracks found." ]
 
@@ -156,8 +156,31 @@ userTastesView tracksList =
 
                 else
                     [ h2 [] [ text "Your tastes" ]
-                    , Chart.chart [] (chartConfig tracksList)
+                    , Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
+                    , h2 [] [ text "Search" ]
+                    , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
+                    , case model.searchTracks of
+                        [] ->
+                            chartTrackView model
+
+                        searchTracks ->
+                            ol [] <| map (\track -> trackLi (SelectedSearchedTrack track) trackDetails track) searchTracks
                     ]
+
+
+chartTrackView : Model -> Html Msg
+chartTrackView model =
+    case model.searchedTrack of
+        Nothing ->
+            div [] [ p [] [ text "No results." ] ]
+
+        Just track ->
+            case track.audioFeatures of
+                Nothing ->
+                    text "Loading audio features"
+
+                Just audioFeatures ->
+                    Chart.chart [] (chartConfig <| trackData audioFeatures)
 
 
 profileView : Maybe Profile -> Html Msg
@@ -181,14 +204,14 @@ headerView maybeProfile =
         ]
 
 
-mainView : TimeRange -> List Artist -> List Track -> Html Msg
-mainView timeRange topArtists topTracks =
+mainView : Model -> Html Msg
+mainView model =
     main_ []
-        [ timeRangeSelect timeRange
+        [ timeRangeSelect model.timeRange
         , div [ id "top-sections" ]
-            [ topArtistsView topArtists
-            , topTracksView topTracks
-            , userTastesView topTracks
+            [ topArtistsView model.topArtists
+            , topTracksView model.topTracks
+            , userTastesView model
             ]
         ]
 

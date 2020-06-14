@@ -54,18 +54,23 @@ averageAudioFeatureValue audioFeatureAccessor tracks =
         Nothing
 
     else
-        Just <| foldl (+) 0 values / toFloat (length values)
+        Just <| roundToOneDecimal <| foldl (+) 0 values / toFloat (length values)
 
 
 normalizePercentage : AudioFeatures -> AudioFeatures
 normalizePercentage audioFeatures =
     AudioFeatures
-        (audioFeatures.acousticness * 100)
-        (audioFeatures.danceability * 100)
-        (audioFeatures.energy * 100)
-        (audioFeatures.instrumentalness * 100)
-        (audioFeatures.liveness * 100)
-        (audioFeatures.speechiness * 100)
-        (audioFeatures.valence * 100)
+        (audioFeatures.acousticness * 100 |> roundToOneDecimal)
+        (audioFeatures.danceability * 100 |> roundToOneDecimal)
+        (audioFeatures.energy * 100 |> roundToOneDecimal)
+        (audioFeatures.instrumentalness * 100 |> roundToOneDecimal)
+        (audioFeatures.liveness * 100 |> roundToOneDecimal)
+        (audioFeatures.speechiness * 100 |> roundToOneDecimal)
+        (audioFeatures.valence * 100 |> roundToOneDecimal)
         -- Tempo normalization according to this diagram https://developer.spotify.com/assets/audio/tempo.png
-        ((audioFeatures.tempo - 50) / 1.5)
+        ((audioFeatures.tempo - 50) / 1.5 |> roundToOneDecimal)
+
+
+roundToOneDecimal : Float -> Float
+roundToOneDecimal n =
+    (n * 10 |> round |> toFloat) / 10
