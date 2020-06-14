@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server",
+    "start": "webpack-dev-server --port 8080",
     "build": "rm -rf dist && NODE_ENV=production webpack -p"
   },
   "keywords": [],
