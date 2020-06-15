@@ -5,8 +5,8 @@ import Chart exposing (chartConfig, trackData, tracksAverageData)
 import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
 import Helper exposing (smallestImage)
-import Html exposing (Html, a, button, div, footer, h1, h2, h3, header, input, li, main_, ol, p, section, span, text)
-import Html.Attributes exposing (class, classList, href, id, placeholder, style, value, width)
+import Html exposing (Html, a, button, div, footer, h1, h2, header, input, li, main_, ol, p, section, span, text)
+import Html.Attributes exposing (class, classList, href, id, placeholder, style, value)
 import Html.Events exposing (onClick, onInput, onMouseDown)
 import List exposing (any, map)
 import Maybe exposing (withDefault)
@@ -18,12 +18,16 @@ import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Elmify - Spotify stats"
+    { title = "Elmify - stats about your listening tastes"
     , body =
         [ authView model.url model.authDetails
         , headerView model.profile
         , mainView model
-        , footerView
+        , if model.authDetails /= Nothing then
+            footerView
+
+          else
+            text ""
         ]
     }
 
@@ -40,7 +44,7 @@ profileImage images =
 artistLi : Artist -> Html Msg
 artistLi artist =
     li [ onMouseDown <| ArtistExpanded artist ]
-        [ div [ class "artist-container" ]
+        [ div [ class "artist-container", class "li-main-container" ]
             [ profileImage artist.images
             , p [] [ text <| artist.name ]
             ]
@@ -63,8 +67,8 @@ artistDetails artist =
 
 trackLi : Msg -> (Track -> Html Msg) -> Track -> Html Msg
 trackLi clickCmd detailsContainer track =
-    li [ onClick <| clickCmd ]
-        [ div [ class "track-container" ]
+    li []
+        [ div [ class "track-container", class "li-main-container", onClick <| clickCmd ]
             [ p []
                 [ text <| track.name
                 , span [] [ text <| " - " ++ (join ", " <| map .name track.artists) ]
@@ -116,29 +120,28 @@ simpleBarView name percentage color =
 
 topArtistsView : List Artist -> Html Msg
 topArtistsView list =
-    section [ id "top-artists" ] <|
-        case list of
+    section [ id "top-artists" ]
+        [ h2 [] [ text "Your top artists" ]
+        , case list of
             [] ->
-                [ text "No artists found." ]
+                p [] [ text "No artists found." ]
 
             artists ->
-                [ h2 [] [ text "Your top artists" ]
-                , ol [] <| map artistLi artists
-                ]
+                ol [] <| map artistLi artists
+        ]
 
 
 topTracksView : List Track -> Html Msg
 topTracksView tracksList =
-    section [ id "top-tracks" ] <|
-        case tracksList of
+    section [ id "top-tracks" ]
+        [ h2 [] [ text "Your top tracks", audioFeaturesHelpDalogue ]
+        , case tracksList of
             [] ->
-                [ text "No tracks found." ]
+                p [] [ text "No tracks found." ]
 
             tracks ->
-                [ h2 []
-                    [ text "Your top tracks", audioFeaturesHelpDalogue ]
-                , ol [] <| map (\track -> trackLi (TrackExpanded track) trackDetails track) tracks
-                ]
+                ol [] <| map (\track -> trackLi (TrackExpanded track) trackDetails track) tracks
+        ]
 
 
 audioFeaturesHelpDalogue : Html Msg
@@ -159,26 +162,27 @@ userTastesView model =
             map .audioFeatures model.topTracks
     in
     section [ id "users-tastes" ] <|
-        case model.topTracks of
-            [] ->
-                [ text "No tracks found." ]
+        [ h2 [] [ text "Your tastes", audioFeaturesHelpDalogue ] ]
+            ++ (case model.topTracks of
+                    [] ->
+                        [ text "No tracks found." ]
 
-            _ ->
-                if any (\x -> x == Nothing) maybeAudioFeatures then
-                    [ p [] [ text "Loading audio features..." ] ]
+                    _ ->
+                        if any (\x -> x == Nothing) maybeAudioFeatures then
+                            [ p [] [ text "Loading audio features..." ] ]
 
-                else
-                    [ h2 [] [ text "Your tastes", audioFeaturesHelpDalogue ]
-                    , Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
-                    , h2 [] [ text "Search" ]
-                    , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
-                    , case model.searchTracks of
-                        [] ->
-                            chartTrackView model
+                        else
+                            [ Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
+                            , h2 [] [ text "Search" ]
+                            , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
+                            , case model.searchTracks of
+                                [] ->
+                                    chartTrackView model
 
-                        searchTracks ->
-                            ol [] <| map (\track -> trackLi (SelectedSearchedTrack track) trackDetails track) searchTracks
-                    ]
+                                searchTracks ->
+                                    ol [] <| map (\track -> trackLi (SelectedSearchedTrack track) trackDetails track) searchTracks
+                            ]
+               )
 
 
 chartTrackView : Model -> Html Msg
@@ -247,7 +251,6 @@ authView url maybeAuthDetails =
                 [ p [] [ text "First, you need to" ]
                 , a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ]
                     [ button [] [ text "login with Spotify" ] ]
-                , p [] [ text "." ]
                 ]
             ]
         ]

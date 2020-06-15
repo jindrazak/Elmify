@@ -4,10 +4,10 @@
 @darkgrey: #212121;
 
 html {
-  height: 100%;
   background-color: @darkgrey;
   color: white;
   font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
 }
 
 body{
@@ -38,15 +38,18 @@ h2 {
     align-self: center;
     justify-self: center;
     margin-left: 0.5rem;
+    position: relative;
     &:hover{
       .help-container{
+        position: absolute;
+        top: 2rem;
+        left: -20rem;
         span{
           font-size: 1.2rem;
         }
         font-size: 1rem;
         background-color: #484848;
-        width: 25rem;
-        position: absolute;
+        width: 30rem;
         display: block;
         padding: 1.3rem;
         border-radius: 9px;
@@ -73,7 +76,6 @@ ul, ol {
 div{
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
   box-sizing: border-box;
 }
 
@@ -84,17 +86,16 @@ li {
   flex-direction: column;
   flex-wrap: nowrap;
   border-bottom: 2px solid #353535;
-  padding: 0.2rem;
+  padding: 0.2rem 0;
 }
 
 li>div:first-child:before {
   content: counter(item);
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
   margin-right: 1rem;
+  margin-left: 0.5rem;
   color: @primary;
-  width: 1rem;
+  width: 1.2rem;
+  text-align: right;
 }
 
 p {
@@ -143,6 +144,7 @@ input{
   height: 100%;
   background-color: #61616145;
   backdrop-filter: blur(8px);
+  z-index: 1;
   #auth-dialogue {
     align-items: center;
     flex-direction: column;
@@ -186,6 +188,7 @@ header {
   opacity: 0;
   margin: 0 2rem;
   transition: visibility 0s, opacity 0.5s linear;
+  flex-wrap: wrap;
   &.expanded{
     height: auto;
     visibility: visible;
@@ -222,6 +225,12 @@ button{
   }
 }
 
+.track-container {
+  align-content: flex-start;
+  width: 100%;
+  padding: 0.4rem 0
+}
+
 main {
   height: 100%;
   display: flex;
@@ -231,15 +240,18 @@ main {
     justify-content: center;
   }
   #top-sections {
-    li:hover{
-      background-color: #484848;
-    }
+    flex-wrap: wrap;
+    justify-content: center;
     section {
       padding: 1rem;
       display: flex;
       flex-direction: column;
+      .li-main-container:hover{
+        background-color: #484848;
+      }
       &#top-artists {
         width: 22%;
+        min-width: 17rem;
         li {
           .artist-container{
             align-items: center;
@@ -256,16 +268,11 @@ main {
       }
       &#top-tracks{
         width: 45%;
-        .track-container {
-          width: 100%;
-          p{
-            margin-top: 0.4rem;
-            margin-bottom: 0.4rem;
-          }
-        }
+        min-width: 30rem;
       }
       &#users-tastes{
         width: 25%;
+        min-width: 17rem;
         chart-component {
           min-height: 30vh;
         }
@@ -290,6 +297,7 @@ footer {
   width: 100%;
   justify-content: center;
   box-sizing: border-box;
+
   a:hover{
     &:hover{
       color: @darkgrey;
@@ -315,3 +323,68 @@ span{
   }
 }
 
+
+@media only screen and (max-width: 600px) {
+ #auth-prompt{
+   flex-direction: column;
+   button{
+     margin-top: 1rem;
+   }
+ }
+  header{
+    padding: 0.5rem;
+    #logo-container{
+      h1{
+        font-size: 2rem;
+      }
+      p{
+        display: none;
+        width: 7rem;
+        margin-top: 7px;
+        font-size: 0.7rem;
+      }
+    }
+    #profile-panel{
+      margin: 0;
+      #name-container {
+        font-size: 0.8rem;
+      }
+    }
+    .image-container{
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+  main{
+    #timerange-picker{
+      margin: 0.8rem;
+      button{
+        font-size: 0.7rem;
+      }
+    }
+    section {
+      width: 100% !important;
+      min-width: unset !important;
+      h2{
+        margin: 0.7rem 0
+      }
+      .help:hover{
+        div.help-container {
+          top: 2rem;
+          left: -6rem;
+          font-size: 0.6rem;
+          background-color: #484848;
+          width: 15rem;
+          display: block;
+          padding: 0.7rem;
+          border-radius: 9px;
+          position: absolute;
+          span {
+            font-size: 0.8rem;
+          }
+        }
+      }
+
+    }
+  }
+}
