@@ -251,7 +251,6 @@ authView url maybeAuthDetails =
                 [ p [] [ text "First, you need to" ]
                 , a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ]
                     [ button [] [ text "login with Spotify" ] ]
-                , p [] [ text "." ]
                 ]
             ]
         ]
