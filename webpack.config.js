@@ -41,15 +41,6 @@ module.exports = {
                     loader: 'less-loader' // compiles Less to CSS
                 }]
             },
-            // loading fonts
-            {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader?limit=10000&mimetype=application/font-woff'
-            },
-            {
-                test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'file-loader'
-            }
         ],
 
         // set noParse for elm files since we don't need webpack to resolve any imports there
@@ -59,7 +50,12 @@ module.exports = {
     plugins: [
         // generate Html using HtmlWebpackPlugin
         new HtmlWebpackPlugin({
-            title: 'Elm Webpack Boilerplate'
+            title: 'Elmify - stats about your listening tastes',
+            meta: {
+                viewport: 'width=device-width, initial-scale=1',
+                description: 'Display your top tracks and top artists based on your listening habits on Spotify. Discover which songs suit your listening tastes the best.',
+                "theme-color": "#ff1493"
+            }
         }),
         // configure MiniCssExtractPlugin
         new MiniCssExtractPlugin({
