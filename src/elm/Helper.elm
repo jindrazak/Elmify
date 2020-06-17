@@ -1,8 +1,9 @@
 module Helper exposing (..)
 
-import List exposing (any, foldl, length, map)
+import Dict exposing (Dict)
+import List exposing (any, concatMap, foldl, foldr, length, map)
 import Maybe exposing (withDefault)
-import Types exposing (AudioFeatures, Image, Track)
+import Types exposing (Artist, AudioFeatures, Image, Track)
 
 
 smallestImage : List Image -> Maybe Image
@@ -74,3 +75,13 @@ normalizePercentage audioFeatures =
 roundToOneDecimal : Float -> Float
 roundToOneDecimal n =
     (n * 10 |> round |> toFloat) / 10
+
+
+extractGenres: List Artist -> List String
+extractGenres artists =
+    concatMap (\artist -> artist.genres) artists
+
+
+countOcurences: List String -> Dict String Int
+countOcurences strings =
+    foldr (\s -> Dict.insert s 0) Dict.empty strings

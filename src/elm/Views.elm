@@ -4,7 +4,7 @@ import Browser
 import Chart exposing (chartConfig, trackData, tracksAverageData)
 import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
-import Helper exposing (smallestImage)
+import Helper exposing (extractGenres, smallestImage)
 import Html exposing (Html, a, button, div, footer, h1, h2, header, input, li, main_, ol, p, section, span, text)
 import Html.Attributes exposing (class, classList, href, id, placeholder, style, value)
 import Html.Events exposing (onClick, onInput, onMouseDown)
@@ -21,8 +21,8 @@ view model =
     { title = "Elmify - stats about your listening tastes"
     , body =
         [ authView model.url model.authDetails
-        , headerView model.profile
-        , mainView model
+        , headerView model.profile model.authDetails
+        , mainView model model.authDetails
         , if model.authDetails /= Nothing then
             footerView
 
@@ -172,7 +172,8 @@ userTastesView model =
                             [ p [] [ text "Loading audio features..." ] ]
 
                         else
-                            [ Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
+                            [ div [] [text <| join ", " <| extractGenres model.topArtists]
+                            , Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
                             , h2 [] [ text "Search" ]
                             , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
                             , case model.searchTracks of
@@ -213,17 +214,17 @@ profileView maybeProfile =
                 ]
 
 
-headerView : Maybe Profile -> Html Msg
-headerView maybeProfile =
-    header []
+headerView : Maybe Profile -> Maybe AuthDetails  -> Html Msg
+headerView maybeProfile maybeAuthDetails =
+    header [classList [ ( "blur", maybeAuthDetails == Nothing ) ]]
         [ logoView
         , profileView maybeProfile
         ]
 
 
-mainView : Model -> Html Msg
-mainView model =
-    main_ []
+mainView : Model -> Maybe AuthDetails  -> Html Msg
+mainView model maybeAuthDetails =
+    main_ [classList [ ( "blur", maybeAuthDetails == Nothing ) ]]
         [ timeRangeSelect model.timeRange
         , div [ id "top-sections" ]
             [ topArtistsView model.topArtists
