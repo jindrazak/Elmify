@@ -4,11 +4,11 @@ import Browser
 import Chart exposing (chartConfig, trackData, tracksAverageData)
 import Chartjs.Chart as Chart
 import Constants exposing (audioFeaturesConfigurations)
-import Helper exposing (extractGenres, smallestImage)
-import Html exposing (Html, a, button, div, footer, h1, h2, header, input, li, main_, ol, p, section, span, text)
+import Helper exposing (countOcurences, extractGenres, getMostFrequentStrings, smallestImage)
+import Html exposing (Html, a, button, div, footer, h1, h2, h3, header, input, li, main_, ol, p, section, span, text)
 import Html.Attributes exposing (class, classList, href, id, placeholder, style, value)
 import Html.Events exposing (onClick, onInput, onMouseDown)
-import List exposing (any, map)
+import List exposing (any, map, take)
 import Maybe exposing (withDefault)
 import String exposing (fromFloat, join)
 import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesConfiguration, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track, placeholderImage)
@@ -172,8 +172,8 @@ userTastesView model =
                             [ p [] [ text "Loading audio features..." ] ]
 
                         else
-                            [ div [] [text <| join ", " <| extractGenres model.topArtists]
-                            , Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
+                            [ Chart.chart [] (chartConfig <| tracksAverageData model.topTracks)
+                            , topGenresView model
                             , h2 [] [ text "Search" ]
                             , input [ placeholder "Search for a track", value model.searchQuery, onInput SearchInputChanged ] []
                             , case model.searchTracks of
@@ -184,6 +184,14 @@ userTastesView model =
                                     ol [] <| map (\track -> trackLi (SelectedSearchedTrack track) trackDetails track) searchTracks
                             ]
                )
+
+
+topGenresView : Model -> Html Msg
+topGenresView model =
+    div [ id "top-genres" ]
+        [ h3 [] [ text "Most favourite genres: " ]
+        , p [] [ text (join ", " <| getMostFrequentStrings <| take 10 <| extractGenres model.topArtists) ]
+        ]
 
 
 chartTrackView : Model -> Html Msg
@@ -214,17 +222,17 @@ profileView maybeProfile =
                 ]
 
 
-headerView : Maybe Profile -> Maybe AuthDetails  -> Html Msg
+headerView : Maybe Profile -> Maybe AuthDetails -> Html Msg
 headerView maybeProfile maybeAuthDetails =
-    header [classList [ ( "blur", maybeAuthDetails == Nothing ) ]]
+    header [ classList [ ( "blur", maybeAuthDetails == Nothing ) ] ]
         [ logoView
         , profileView maybeProfile
         ]
 
 
-mainView : Model -> Maybe AuthDetails  -> Html Msg
+mainView : Model -> Maybe AuthDetails -> Html Msg
 mainView model maybeAuthDetails =
-    main_ [classList [ ( "blur", maybeAuthDetails == Nothing ) ]]
+    main_ [ classList [ ( "blur", maybeAuthDetails == Nothing ) ] ]
         [ timeRangeSelect model.timeRange
         , div [ id "top-sections" ]
             [ topArtistsView model.topArtists

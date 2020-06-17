@@ -1,8 +1,9 @@
 module Helper exposing (..)
 
-import Dict exposing (Dict)
-import List exposing (any, concatMap, foldl, foldr, length, map)
+import Dict exposing (Dict, get, insert, toList, update)
+import List exposing (any, concatMap, foldl, foldr, length, map, reverse, sort, sortBy)
 import Maybe exposing (withDefault)
+import Tuple exposing (first, second)
 import Types exposing (Artist, AudioFeatures, Image, Track)
 
 
@@ -82,6 +83,26 @@ extractGenres artists =
     concatMap (\artist -> artist.genres) artists
 
 
+getMostFrequentStrings:  List String -> List String
+getMostFrequentStrings strings =
+    let
+        counts = toList <| countOcurences strings
+        sortedCounts = reverse <| sortBy second counts
+    in
+        map first sortedCounts
+
 countOcurences: List String -> Dict String Int
 countOcurences strings =
-    foldr (\s -> Dict.insert s 0) Dict.empty strings
+    foldr incrementDictValue Dict.empty strings
+
+
+incrementDictValue: String -> Dict String Int -> Dict String Int
+incrementDictValue key dict =
+    let
+        currentValue = get key dict
+    in
+    case currentValue of
+        Nothing ->
+            insert key 1 dict
+        Just value ->
+             insert key (value + 1) dict
