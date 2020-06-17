@@ -1,7 +1,7 @@
 module Requests exposing (..)
 
 import Decoders exposing (artistsPagingObjectDecoder, audioFeaturesDecoder, audioFeaturesListDecoder, profileDecoder, searchTracksPagingObjectDecoder, tracksPagingObjectDecoder)
-import Http
+import Http exposing (Expect)
 import List exposing (map)
 import String exposing (join)
 import Types exposing (Msg(..), TimeRange, TopSubject(..), Track)
@@ -66,7 +66,8 @@ getTrackSearch accessToken q =
         Http.expectJson GotSearchTracks searchTracksPagingObjectDecoder
 
 
-spotifyGetRequest accessToken url decoder =
+spotifyGetRequest : String -> String -> Expect Msg -> Cmd Msg
+spotifyGetRequest accessToken url expect =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
@@ -74,5 +75,5 @@ spotifyGetRequest accessToken url decoder =
         , timeout = Nothing
         , tracker = Nothing
         , url = url
-        , expect = decoder
+        , expect = expect
         }

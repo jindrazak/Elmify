@@ -87,7 +87,7 @@ getMostFrequentStrings : List String -> List String
 getMostFrequentStrings strings =
     let
         counts =
-            toList <| countOcurences strings
+            toList <| countOccurences strings
 
         sortedCounts =
             reverse <| sortBy second counts
@@ -95,8 +95,8 @@ getMostFrequentStrings strings =
     map first sortedCounts
 
 
-countOcurences : List String -> Dict String Int
-countOcurences strings =
+countOccurences : List String -> Dict String Int
+countOccurences strings =
     foldr incrementDictValue Dict.empty strings
 
 
