@@ -1,7 +1,7 @@
 module Requests exposing (..)
 
 import Decoders exposing (artistsPagingObjectDecoder, audioFeaturesDecoder, audioFeaturesListDecoder, profileDecoder, searchTracksPagingObjectDecoder, tracksPagingObjectDecoder)
-import Http
+import Http exposing (Expect)
 import List exposing (map)
 import String exposing (join)
 import Types exposing (Msg(..), TimeRange, TopSubject(..), Track)
@@ -11,89 +11,69 @@ import UrlHelper exposing (spotifyTopUrl)
 
 getProfile : String -> Cmd Msg
 getProfile accessToken =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , body = Http.emptyBody
-        , timeout = Nothing
-        , tracker = Nothing
-        , url = "https://api.spotify.com/v1/me"
-        , expect = Http.expectJson GotProfile profileDecoder
-        }
+    spotifyGetRequest accessToken
+        (Builder.crossOrigin "https://api.spotify.com" [ "v1", "me" ] [])
+    <|
+        Http.expectJson GotProfile profileDecoder
 
 
 getUsersTopArtists : String -> TimeRange -> Cmd Msg
 getUsersTopArtists accessToken timeRange =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , body = Http.emptyBody
-        , timeout = Nothing
-        , tracker = Nothing
-        , url = spotifyTopUrl TopArtists timeRange
-        , expect = Http.expectJson GotTopArtists artistsPagingObjectDecoder
-        }
+    spotifyGetRequest accessToken
+        (spotifyTopUrl TopArtists timeRange)
+    <|
+        Http.expectJson GotTopArtists artistsPagingObjectDecoder
 
 
 getUsersTopTracks : String -> TimeRange -> Cmd Msg
 getUsersTopTracks accessToken timeRange =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , body = Http.emptyBody
-        , timeout = Nothing
-        , tracker = Nothing
-        , url = spotifyTopUrl TopTracks timeRange
-        , expect = Http.expectJson GotTopTracks tracksPagingObjectDecoder
-        }
+    spotifyGetRequest accessToken
+        (spotifyTopUrl TopTracks timeRange)
+    <|
+        Http.expectJson GotTopTracks tracksPagingObjectDecoder
 
 
 getSearchedTrackAudioFeatures : String -> Track -> Cmd Msg
 getSearchedTrackAudioFeatures accessToken track =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , body = Http.emptyBody
-        , timeout = Nothing
-        , tracker = Nothing
-        , url =
-            Builder.crossOrigin "https://api.spotify.com"
-                [ "v1", "audio-features", track.id ]
-                []
-        , expect = Http.expectJson GotSearchedTrackAudioFeatures audioFeaturesDecoder
-        }
+    spotifyGetRequest accessToken
+        (Builder.crossOrigin "https://api.spotify.com" [ "v1", "audio-features", track.id ] [])
+    <|
+        Http.expectJson GotSearchedTrackAudioFeatures audioFeaturesDecoder
 
 
 getAudioFeatures : String -> List Track -> Cmd Msg
 getAudioFeatures accessToken tracks =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-        , body = Http.emptyBody
-        , timeout = Nothing
-        , tracker = Nothing
-        , url =
-            Builder.crossOrigin "https://api.spotify.com"
-                [ "v1", "audio-features" ]
-                [ Builder.string "ids" <| join "," <| map .id tracks ]
-        , expect = Http.expectJson GotAudioFeatures audioFeaturesListDecoder
-        }
+    spotifyGetRequest accessToken
+        (Builder.crossOrigin "https://api.spotify.com"
+            [ "v1", "audio-features" ]
+            [ Builder.string "ids" <| join "," <| map .id tracks ]
+        )
+    <|
+        Http.expectJson GotAudioFeatures audioFeaturesListDecoder
 
 
 getTrackSearch : String -> String -> Cmd Msg
 getTrackSearch accessToken q =
+    spotifyGetRequest accessToken
+        (Builder.crossOrigin "https://api.spotify.com"
+            [ "v1", "search" ]
+            [ Builder.string "q" q
+            , Builder.string "type" "track"
+            , Builder.string "limit" "10"
+            ]
+        )
+    <|
+        Http.expectJson GotSearchTracks searchTracksPagingObjectDecoder
+
+
+spotifyGetRequest : String -> String -> Expect Msg -> Cmd Msg
+spotifyGetRequest accessToken url expect =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
         , body = Http.emptyBody
         , timeout = Nothing
         , tracker = Nothing
-        , url =
-            Builder.crossOrigin "https://api.spotify.com"
-                [ "v1", "search" ]
-                [ Builder.string "q" q
-                , Builder.string "type" "track"
-                , Builder.string "limit" "10"
-                ]
-        , expect = Http.expectJson GotSearchTracks searchTracksPagingObjectDecoder
+        , url = url
+        , expect = expect
         }
