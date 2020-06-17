@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Browser.Navigation as Nav exposing (pushUrl, replaceUrl)
+import Browser.Navigation as Nav exposing (pushUrl)
 import Constants exposing (defaultModel)
 import Helper exposing (normalizePercentage)
 import Http exposing (Error(..))
@@ -14,7 +14,7 @@ import Types exposing (Artist, Docs, Model, Msg(..), Profile, TimeRange(..))
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, string)
 import UrlHelper exposing (extractFromQueryString)
-import Views exposing (view)
+import Views.Main exposing (view)
 
 
 
@@ -43,7 +43,7 @@ routeParser =
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
+init _ url key =
     let
         model =
             defaultModel key url
@@ -57,7 +57,12 @@ init flags url key =
             case maybeAccessToken of
                 Just accessToken ->
                     ( { model | route = Parser.parse routeParser url, authDetails = Just { accessToken = accessToken } }
-                    , Cmd.batch [ getProfile accessToken, getUsersTopArtists accessToken ShortTerm, getUsersTopTracks accessToken ShortTerm, pushUrl key "/" ]
+                    , Cmd.batch
+                        [ getProfile accessToken
+                        , getUsersTopArtists accessToken ShortTerm
+                        , getUsersTopTracks accessToken ShortTerm
+                        , pushUrl key "/"
+                        ]
                     )
 
                 Maybe.Nothing ->
@@ -106,11 +111,11 @@ update msg model =
                 Ok pagingObject ->
                     ( { model | topTracks = pagingObject.tracks }
                     , case model.authDetails of
+                        Just authDetails ->
+                            getAudioFeatures authDetails.accessToken pagingObject.tracks
+
                         Nothing ->
                             Cmd.none
-
-                        Maybe.Just authDetails ->
-                            getAudioFeatures authDetails.accessToken pagingObject.tracks
                     )
 
                 Err error ->
@@ -121,7 +126,9 @@ update msg model =
                 Ok audioFeaturesList ->
                     let
                         topTracks =
-                            map2 (\track audioFeatures -> { track | audioFeatures = Just <| normalizePercentage audioFeatures }) model.topTracks audioFeaturesList.audioFeatures
+                            map2 (\track audioFeatures -> { track | audioFeatures = Just <| normalizePercentage audioFeatures })
+                                model.topTracks
+                                audioFeaturesList.audioFeatures
                     in
                     ( { model | topTracks = topTracks }, Cmd.none )
 
@@ -132,11 +139,14 @@ update msg model =
             let
                 cmd =
                     case model.authDetails of
+                        Just authDetails ->
+                            batch
+                                [ getUsersTopArtists authDetails.accessToken timeRange
+                                , getUsersTopTracks authDetails.accessToken timeRange
+                                ]
+
                         Nothing ->
                             Cmd.none
-
-                        Maybe.Just authDetails ->
-                            batch [ getUsersTopArtists authDetails.accessToken timeRange, getUsersTopTracks authDetails.accessToken timeRange ]
             in
             ( { model | timeRange = timeRange }, cmd )
 
@@ -182,15 +192,15 @@ update msg model =
             let
                 cmd =
                     case model.authDetails of
-                        Nothing ->
-                            Cmd.none
-
                         Maybe.Just authDetails ->
                             if length searchQuery > 0 then
                                 getTrackSearch authDetails.accessToken searchQuery
 
                             else
                                 Cmd.none
+
+                        Nothing ->
+                            Cmd.none
             in
             ( { model | searchQuery = searchQuery, searchedTrack = Nothing }, cmd )
 
@@ -198,11 +208,11 @@ update msg model =
             let
                 cmd =
                     case model.authDetails of
-                        Nothing ->
-                            Cmd.none
-
                         Maybe.Just authDetails ->
                             getSearchedTrackAudioFeatures authDetails.accessToken searchedTrack
+
+                        Nothing ->
+                            Cmd.none
             in
             ( { model | searchedTrack = Just searchedTrack, searchTracks = [], searchQuery = searchedTrack.name }, cmd )
 
@@ -212,11 +222,11 @@ update msg model =
                     let
                         updatedSearchedTrack =
                             case model.searchedTrack of
-                                Nothing ->
-                                    Nothing
-
                                 Just searchedTrack ->
                                     Just { searchedTrack | audioFeatures = Just (normalizePercentage audioFeatures) }
+
+                                Nothing ->
+                                    Nothing
                     in
                     ( { model | searchedTrack = updatedSearchedTrack }, Cmd.none )
 

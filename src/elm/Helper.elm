@@ -1,7 +1,7 @@
 module Helper exposing (..)
 
-import Dict exposing (Dict, get, insert, toList, update)
-import List exposing (any, concatMap, foldl, foldr, length, map, reverse, sort, sortBy)
+import Dict exposing (Dict, get, insert, toList)
+import List exposing (any, concatMap, foldl, foldr, length, map, reverse, sortBy)
 import Maybe exposing (withDefault)
 import Tuple exposing (first, second)
 import Types exposing (Artist, AudioFeatures, Image, Track)
@@ -78,31 +78,37 @@ roundToOneDecimal n =
     (n * 10 |> round |> toFloat) / 10
 
 
-extractGenres: List Artist -> List String
+extractGenres : List Artist -> List String
 extractGenres artists =
     concatMap (\artist -> artist.genres) artists
 
 
-getMostFrequentStrings:  List String -> List String
+getMostFrequentStrings : List String -> List String
 getMostFrequentStrings strings =
     let
-        counts = toList <| countOcurences strings
-        sortedCounts = reverse <| sortBy second counts
-    in
-        map first sortedCounts
+        counts =
+            toList <| countOcurences strings
 
-countOcurences: List String -> Dict String Int
+        sortedCounts =
+            reverse <| sortBy second counts
+    in
+    map first sortedCounts
+
+
+countOcurences : List String -> Dict String Int
 countOcurences strings =
     foldr incrementDictValue Dict.empty strings
 
 
-incrementDictValue: String -> Dict String Int -> Dict String Int
+incrementDictValue : String -> Dict String Int -> Dict String Int
 incrementDictValue key dict =
     let
-        currentValue = get key dict
+        currentValue =
+            get key dict
     in
     case currentValue of
         Nothing ->
             insert key 1 dict
+
         Just value ->
-             insert key (value + 1) dict
+            insert key (value + 1) dict
