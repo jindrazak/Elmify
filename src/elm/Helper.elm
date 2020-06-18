@@ -44,19 +44,24 @@ audioFeatureValue audioFeatureAccessor track =
 
 
 averageAudioFeatureValue : (AudioFeatures -> Float) -> List Track -> Maybe Float
-averageAudioFeatureValue audioFeatureAccessor tracks =
+averageAudioFeatureValue audioFeatureAccessor trackList =
     let
         maybeValues =
-            map (audioFeatureValue audioFeatureAccessor) tracks
+            map (audioFeatureValue audioFeatureAccessor) trackList
 
         values =
             map (\x -> withDefault 0 x) maybeValues
     in
-    if any (\x -> x == Nothing) maybeValues then
-        Nothing
+    case trackList of
+        [] ->
+            Nothing
 
-    else
-        Just <| roundToOneDecimal <| foldl (+) 0 values / toFloat (length values)
+        _ ->
+            if any (\x -> x == Nothing) maybeValues then
+                Nothing
+
+            else
+                Just <| roundToOneDecimal <| foldl (+) 0 values / toFloat (length values)
 
 
 normalizePercentage : AudioFeatures -> AudioFeatures
