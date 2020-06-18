@@ -2,8 +2,9 @@ module HelperTest exposing (..)
 
 import Dict exposing (get)
 import Expect exposing (Expectation, FloatingPointTolerance(..), within)
-import Helper exposing (countOccurences, getMostFrequentStrings, incrementDictValue, roundToOneDecimal)
+import Helper exposing (averageAudioFeatureValue, countOccurences, getMostFrequentStrings, incrementDictValue, roundToOneDecimal, smallestImage)
 import Test exposing (..)
+import Types exposing (AudioFeatures, Image, Track)
 
 
 suite : Test
@@ -39,4 +40,25 @@ suite =
             , test "works with decimal numbers" <|
                 \_ -> within (Absolute 0.05) 42.2 <| roundToOneDecimal 42.17
             ]
+        , describe "smallestImage"
+            [ test "works with empty list" <|
+                \_ -> Expect.equal Nothing <| smallestImage []
+            , test "works with images of different sizes " <|
+                \_ -> Expect.equal (Just (Image (Just 8) (Just 1) "")) <| smallestImage [ Image (Just 8) (Just 1) "", Image (Just 3) (Just 3) "" ]
+            , test "works with images of different sizes reversed" <|
+                \_ -> Expect.equal (Just (Image (Just 8) (Just 1) "")) <| smallestImage [ Image (Just 3) (Just 3) "", Image (Just 8) (Just 1) "" ]
+            ]
+        , describe "averageAudioFeatureValue"
+            [ test "works with empty list" <|
+                \_ -> Expect.equal Nothing <| averageAudioFeatureValue .danceability []
+            , test "works with tracks with audio features" <|
+                \_ -> Expect.equal (Just 20) <| averageAudioFeatureValue .danceability [ trackWithDanceability 10, trackWithDanceability 20, trackWithDanceability 30 ]
+            , test "works with tracks without audio features loaded" <|
+                \_ -> Expect.equal Nothing <| averageAudioFeatureValue .danceability [ trackWithDanceability 10, Track "1" "Song" [] Nothing False ]
+            ]
         ]
+
+
+trackWithDanceability : Float -> Track
+trackWithDanceability value =
+    Track "1" "Song" [] (Just (AudioFeatures 0 value 0 0 0 0 0 0)) False

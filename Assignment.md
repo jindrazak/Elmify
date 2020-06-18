@@ -1,4 +1,4 @@
-# Semestral project assignment - MI-AFP - zakjindr
+# Semestral project assignment - MI-AFP - zakjindr@fit.cvut.cz
 
 This assignment describes Elmify - a front-end web application that shows user's stats about their listening tastes and habits on Spotify made using Elm. 
 
