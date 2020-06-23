@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Browser
 import Browser.Navigation as Nav
+import Color exposing (Color)
 import Http
 import Url
 
@@ -72,7 +73,7 @@ type alias AudioFeaturesList =
 type alias AudioFeaturesConfiguration =
     { name : String
     , accessor : AudioFeatures -> Float
-    , color : String
+    , color : Color
     , description : String
     }
 

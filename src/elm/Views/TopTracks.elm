@@ -1,5 +1,6 @@
 module Views.TopTracks exposing (..)
 
+import Color
 import Constants exposing (audioFeaturesConfigurations)
 import Html exposing (Html, div, h2, li, ol, p, section, span, text)
 import Html.Attributes exposing (class, classList, id)
@@ -54,4 +55,4 @@ audioFeatureView audioFeature audioFeaturesConfiguration =
         percentage =
             audioFeaturesConfiguration.accessor audioFeature
     in
-    simpleBarView audioFeaturesConfiguration.name percentage audioFeaturesConfiguration.color
+    simpleBarView audioFeaturesConfiguration.name percentage (Color.toCssString audioFeaturesConfiguration.color)
