@@ -26,8 +26,8 @@ tracksAverageData tracks =
     addDataset
         (PolarData
             (defaultPolarFromData "User tastes" values
-                |> setBorderColor (All <| Color.rgb255 255 20 147)
-                |> setHoverBackgroundColor (All <| Color.rgb255 255 20 147)
+                |> setBorderColor (PerPoint <| map .color audioFeaturesConfigurations)
+                |> setHoverBackgroundColor (PerPoint <| map .color audioFeaturesConfigurations)
             )
         )
         (Data.dataFromLabels labels)
@@ -45,8 +45,8 @@ trackData audioFeatures =
     addDataset
         (PolarData
             (defaultPolarFromData "User tastes" values
-                |> setBorderColor (All <| Color.rgb255 255 20 147)
-                |> setHoverBackgroundColor (All <| Color.rgb255 255 20 147)
+                |> setBorderColor (PerPoint <| map .color audioFeaturesConfigurations)
+                |> setHoverBackgroundColor (PerPoint <| map .color audioFeaturesConfigurations)
             )
         )
         (Data.dataFromLabels labels)
