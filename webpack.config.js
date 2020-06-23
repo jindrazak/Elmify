@@ -1,4 +1,5 @@
 const path = require('path')
+const Dotenv = require('dotenv-webpack');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
@@ -40,16 +41,21 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             title: 'Elmify - stats about your listening tastes',
+            favicon: "favicon.ico",
             meta: {
                 viewport: 'width=device-width, initial-scale=1',
                 description: 'Display your top tracks and top artists based on your listening habits on Spotify. Discover which songs suit your listening tastes the best.',
-                "theme-color": "#ff1493"
+                "theme-color": "#ff1493",
+                "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION
             }
         }),
         new MiniCssExtractPlugin({
             filename: '[name].[chunkhash].css',
             allChunks: true
         }),
+        new Dotenv({
+            systemvars: true
+        })
     ],
     devServer: {
         inline: true,
