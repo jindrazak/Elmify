@@ -12,27 +12,31 @@ module.exports = {
         './node_modules/@indicatrix/elm-chartjs-webcomponent/webcomponent/chart.js'
     ],
     output: {
-        path: path.resolve(__dirname + '/dist'),
-        filename: '[name].[chunkhash].js',
-        publicPath: '/'
+        path: path.resolve(__dirname, 'dist'),
+        filename: '[name].[contenthash].js',
+        publicPath: '/',
+        clean: true
     },
     module: {
         rules: [
             {
                 test: /\.elm$/,
                 exclude: [/elm-stuff/, /node_modules/],
-                // we want to use optimize=true when building for production
-                loader: process.env.NODE_ENV === 'production' ? 'elm-webpack-loader?verbose=true&optimize=true' : 'elm-webpack-loader?verbose=true'
+                use: {
+                    loader: 'elm-webpack-loader',
+                    options: {
+                        verbose: true,
+                        optimize: process.env.NODE_ENV === 'production'
+                    }
+                }
             },
             {
                 test: /\.less$/,
-                use: [{
-                    loader: 'style-loader'
-                }, {
-                    loader: 'css-loader'
-                }, {
-                    loader: 'less-loader'
-                }]
+                use: [
+                    'style-loader',
+                    'css-loader',
+                    'less-loader'
+                ]
             },
         ],
         // set noParse for elm files since we don't need webpack to resolve any imports there
@@ -50,16 +54,13 @@ module.exports = {
             }
         }),
         new MiniCssExtractPlugin({
-            filename: '[name].[chunkhash].css',
-            allChunks: true
+            filename: '[name].[contenthash].css'
         }),
         new Dotenv({
             systemvars: true
         })
     ],
     devServer: {
-        inline: true,
-        stats: { colors: true },
         historyApiFallback: true
     }
 }
