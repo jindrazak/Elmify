@@ -1,12 +1,12 @@
 module Requests exposing (..)
 
-import Decoders exposing (artistsPagingObjectDecoder, audioFeaturesDecoder, audioFeaturesListDecoder, profileDecoder, searchTracksPagingObjectDecoder, tracksPagingObjectDecoder)
+import Decoders exposing (artistsPagingObjectDecoder, audioFeaturesDecoder, audioFeaturesListDecoder, profileDecoder, searchTracksPagingObjectDecoder, tokenResponseDecoder, tracksPagingObjectDecoder)
 import Http exposing (Expect)
 import List exposing (map)
 import String exposing (join)
 import Types exposing (Msg(..), TimeRange, TopSubject(..), Track)
 import Url.Builder as Builder
-import UrlHelper exposing (spotifyTopUrl)
+import UrlHelper exposing (clientId, spotifyTopUrl)
 
 
 getProfile : String -> Cmd Msg
@@ -76,4 +76,28 @@ spotifyGetRequest accessToken url expect =
         , tracker = Nothing
         , url = url
         , expect = expect
+        }
+
+
+{-| Exchange authorization code for access token using PKCE flow.
+-}
+exchangeCodeForToken : String -> String -> String -> Cmd Msg
+exchangeCodeForToken code redirectUri codeVerifier =
+    Http.request
+        { method = "POST"
+        , headers = []
+        , url = "https://accounts.spotify.com/api/token"
+        , body =
+            Http.stringBody "application/x-www-form-urlencoded"
+                (String.join "&"
+                    [ "client_id=" ++ UrlHelper.clientId
+                    , "grant_type=authorization_code"
+                    , "code=" ++ code
+                    , "redirect_uri=" ++ redirectUri
+                    , "code_verifier=" ++ codeVerifier
+                    ]
+                )
+        , expect = Http.expectJson GotTokenResponse Decoders.tokenResponseDecoder
+        , timeout = Nothing
+        , tracker = Nothing
         }

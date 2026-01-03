@@ -2,7 +2,7 @@ module Decoders exposing (..)
 
 import Json.Decode as Decoder exposing (Decoder)
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesList, Image, Profile, SearchTracksPagingObject, SimplifiedArtist, Track, TracksPagingObject)
+import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesList, Image, Profile, SearchTracksPagingObject, SimplifiedArtist, TokenResponse, Track, TracksPagingObject)
 
 
 profileDecoder : Decoder Profile
@@ -89,3 +89,13 @@ audioFeaturesDecoder =
         |> required "speechiness" Decoder.float
         |> required "valence" Decoder.float
         |> required "tempo" Decoder.float
+
+
+{-| Decoder for Spotify token endpoint response
+-}
+tokenResponseDecoder : Decoder TokenResponse
+tokenResponseDecoder =
+    Decoder.succeed TokenResponse
+        |> required "access_token" Decoder.string
+        |> required "token_type" Decoder.string
+        |> required "expires_in" Decoder.int

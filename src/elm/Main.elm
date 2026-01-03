@@ -1,20 +1,48 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
-import Browser.Navigation as Nav exposing (pushUrl)
+import Browser.Navigation as Nav exposing (load, pushUrl)
 import Constants exposing (defaultModel)
 import Helper exposing (normalizePercentage)
 import Http exposing (Error(..))
 import List exposing (map, map2)
 import Maybe exposing (withDefault)
 import Platform.Cmd exposing (batch)
-import Requests exposing (getAudioFeatures, getProfile, getSearchedTrackAudioFeatures, getTrackSearch, getUsersTopArtists, getUsersTopTracks)
+import Requests exposing (exchangeCodeForToken, getAudioFeatures, getProfile, getSearchedTrackAudioFeatures, getTrackSearch, getUsersTopArtists, getUsersTopTracks)
 import String exposing (length)
 import Types exposing (Artist, Docs, Model, Msg(..), Profile, TimeRange(..))
 import Url exposing (Protocol(..), Url)
-import Url.Parser as Parser exposing ((</>), (<?>), Parser, fragment, string)
-import UrlHelper exposing (extractFromQueryString)
+import Url.Parser as Parser exposing ((</>), Parser, fragment, string)
+import UrlHelper exposing (extractFromQueryString, spotifyAuthUrl, spotifyRedirectUrl)
 import Views.Main exposing (view)
+
+
+-- PORTS for PKCE Authentication
+
+
+{-| Request JavaScript to generate PKCE code verifier and challenge.
+-}
+port requestPkceChallenge : () -> Cmd msg
+
+
+{-| Request JavaScript to retrieve the stored code verifier.
+-}
+port requestCodeVerifier : () -> Cmd msg
+
+
+{-| Receive the code challenge from JavaScript (for building auth URL).
+-}
+port receiveCodeChallenge : (String -> msg) -> Sub msg
+
+
+{-| Receive the code verifier from JavaScript (for token exchange).
+-}
+port receiveCodeVerifier : (String -> msg) -> Sub msg
+
+
+{-| Receive authentication errors from JavaScript.
+-}
+port receiveAuthError : (String -> msg) -> Sub msg
 
 
 
@@ -48,24 +76,22 @@ init _ url key =
         model =
             defaultModel key url
     in
-    case Parser.parse routeParser url of
-        Just ( "login-redirect", fragment ) ->
-            let
-                maybeAccessToken =
-                    extractFromQueryString (withDefault "" fragment) "access_token"
-            in
-            case maybeAccessToken of
-                Just accessToken ->
-                    ( { model | route = Parser.parse routeParser url, authDetails = Just { accessToken = accessToken } }
-                    , Cmd.batch
-                        [ getProfile accessToken
-                        , getUsersTopArtists accessToken ShortTerm
-                        , getUsersTopTracks accessToken ShortTerm
-                        , pushUrl key "/"
-                        ]
-                    )
+    case url.path of
+        "/login-redirect" ->
+            -- PKCE flow: extract authorization code from query params
+            case url.query of
+                Just queryString ->
+                    case extractFromQueryString queryString "code" of
+                        Just code ->
+                            -- Store code and request verifier from JS
+                            ( { model | route = Parser.parse routeParser url, pendingAuthCode = Just code }
+                            , requestCodeVerifier ()
+                            )
 
-                Maybe.Nothing ->
+                        Nothing ->
+                            ( { model | route = Parser.parse routeParser url }, Cmd.none )
+
+                Nothing ->
                     ( { model | route = Parser.parse routeParser url }, Cmd.none )
 
         _ ->
@@ -240,6 +266,53 @@ update msg model =
             in
             ( { cleanModel | route = model.route }, pushUrl model.key "/logout" )
 
+        -- PKCE Authentication handlers
+        InitiateLogin ->
+            ( model, requestPkceChallenge () )
+
+        ReceivedCodeChallenge codeChallenge ->
+            let
+                redirectUri =
+                    spotifyRedirectUrl model.url
+
+                authUrl =
+                    spotifyAuthUrl redirectUri codeChallenge
+            in
+            ( model, load authUrl )
+
+        ReceivedCodeVerifier codeVerifier ->
+            case model.pendingAuthCode of
+                Just code ->
+                    let
+                        redirectUri =
+                            Url.toString (spotifyRedirectUrl model.url)
+                    in
+                    ( { model | pendingAuthCode = Nothing }
+                    , exchangeCodeForToken code redirectUri codeVerifier
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        GotTokenResponse result ->
+            case result of
+                Ok tokenResponse ->
+                    ( { model | authDetails = Just { accessToken = tokenResponse.accessToken } }
+                    , Cmd.batch
+                        [ getProfile tokenResponse.accessToken
+                        , getUsersTopArtists tokenResponse.accessToken ShortTerm
+                        , getUsersTopTracks tokenResponse.accessToken ShortTerm
+                        , pushUrl model.key "/"
+                        ]
+                    )
+
+                Err _ ->
+                    ( { model | authDetails = Nothing }, Cmd.none )
+
+        ReceivedAuthError _ ->
+            -- Handle auth error - clear auth details
+            ( { model | authDetails = Nothing, pendingAuthCode = Nothing }, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -247,7 +320,11 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Sub.batch
+        [ receiveCodeChallenge ReceivedCodeChallenge
+        , receiveCodeVerifier ReceivedCodeVerifier
+        , receiveAuthError ReceivedAuthError
+        ]
 
 
 handleError : Error -> Model -> ( Model, Cmd Msg )

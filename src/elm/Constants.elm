@@ -18,4 +18,4 @@ audioFeaturesConfigurations =
 
 defaultModel : Nav.Key -> Url -> Model
 defaultModel key url =
-    Model key url Nothing Nothing Nothing [] ShortTerm [] [] "" Nothing
+    Model key url Nothing Nothing Nothing [] ShortTerm [] [] "" Nothing Nothing

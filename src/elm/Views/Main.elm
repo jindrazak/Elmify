@@ -1,12 +1,12 @@
 module Views.Main exposing (..)
 
 import Browser
-import Html exposing (Html, a, button, div, footer, header, main_, p, text)
+import Html exposing (Html, a, button, div, footer, header, main_, p, span, text)
 import Html.Attributes exposing (classList, href, id)
+import Html.Events exposing (onClick)
 import Maybe
 import Types exposing (Artist, ArtistsPagingObject, AudioFeatures, AudioFeaturesConfiguration, AuthDetails, Image, Model, Msg(..), Profile, TimeRange(..), Track)
 import Url exposing (Url)
-import UrlHelper exposing (spotifyAuthLink, spotifyRedirectUrl)
 import Views.Common exposing (logoView, profileView, timeRangeSelect)
 import Views.TopArtists exposing (topArtistsView)
 import Views.TopTracks exposing (topTracksView)
@@ -65,15 +65,15 @@ footerView =
 
 
 authView : Url -> Maybe AuthDetails -> Html Msg
-authView url maybeAuthDetails =
+authView _ maybeAuthDetails =
     div
         [ id "auth-container", classList [ ( "hidden", maybeAuthDetails /= Nothing ) ] ]
         [ div [ id "auth-dialogue" ]
             [ logoView
             , div [ id "auth-prompt" ]
                 [ p [] [ text "First, you need to" ]
-                , a [ href <| spotifyAuthLink <| spotifyRedirectUrl url ]
-                    [ button [] [ text "login with Spotify" ] ]
+                , span []
+                    [ button [ onClick InitiateLogin ] [ text "login with Spotify" ] ]
                 ]
             ]
         ]

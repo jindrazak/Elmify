@@ -102,6 +102,7 @@ type alias Model =
     , searchTracks : List Track
     , searchQuery : String
     , searchedTrack : Maybe Track
+    , pendingAuthCode : Maybe String
     }
 
 
@@ -120,6 +121,21 @@ type Msg
     | SearchInputChanged String
     | SelectedSearchedTrack Track
     | Logout
+      -- PKCE Authentication messages
+    | InitiateLogin
+    | ReceivedCodeChallenge String
+    | ReceivedCodeVerifier String
+    | GotTokenResponse (Result Http.Error TokenResponse)
+    | ReceivedAuthError String
+
+
+{-| Response from Spotify token endpoint
+-}
+type alias TokenResponse =
+    { accessToken : String
+    , tokenType : String
+    , expiresIn : Int
+    }
 
 
 type TimeRange
